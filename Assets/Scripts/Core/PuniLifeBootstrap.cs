@@ -1,10 +1,14 @@
 using UnityEngine;
+using UnityEngine.EventSystems;
 
 public static class PuniLifeBootstrap
 {
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
     private static void Bootstrap()
     {
+        Cursor.visible = true;
+        Cursor.SetCursor(null, Vector2.zero, CursorMode.Auto);
+
         if (Camera.main == null)
         {
             var cameraObject = new GameObject("Main Camera");
@@ -19,6 +23,13 @@ public static class PuniLifeBootstrap
         if (Object.FindAnyObjectByType<UIManager>() == null)
         {
             new GameObject("UIManager").AddComponent<UIManager>();
+        }
+
+        if (Object.FindAnyObjectByType<EventSystem>() == null)
+        {
+            var eventSystemObject = new GameObject("EventSystem");
+            eventSystemObject.AddComponent<EventSystem>();
+            eventSystemObject.AddComponent<StandaloneInputModule>();
         }
 
         if (Object.FindAnyObjectByType<GameManager>() == null)
