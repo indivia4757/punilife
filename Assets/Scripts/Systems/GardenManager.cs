@@ -11,12 +11,12 @@ public sealed class GardenManager
     {
         return level switch
         {
-            <= 0 => "Forgotten Garden",
-            1 => "Flower Corner",
-            2 => "Young Tree",
-            3 => "Clear Pond",
-            4 => "Starlight Garden",
-            _ => "PUNI House"
+            <= 0 => "잊힌 정원",
+            1 => "꽃 피는 모퉁이",
+            2 => "어린 나무 정원",
+            3 => "맑은 연못",
+            4 => "별빛 정원",
+            _ => "푸니 하우스"
         };
     }
 }

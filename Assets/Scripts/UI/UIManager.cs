@@ -18,6 +18,7 @@ public sealed class UIManager : MonoBehaviour
     private StatusBarView affectionBar;
     private PuniView puniView;
     private DexGardenPanel dexGardenPanel;
+    private GrowthGuidePanel growthGuidePanel;
     private DebugPanel debugPanel;
     private Button feedButton;
     private Button playButton;
@@ -42,12 +43,12 @@ public sealed class UIManager : MonoBehaviour
     public void Refresh()
     {
         SaveData data = gameManager.Puni.Data;
-        titleText.text = "PUNI Life";
-        coinText.text = $"Coin {data.status.coin}";
-        levelText.text = $"Lv.{data.status.level}  EXP {data.status.exp}/{data.status.NextExp}";
+        titleText.text = "푸니 라이프";
+        coinText.text = $"코인 {data.status.coin}";
+        levelText.text = $"Lv.{data.status.level}  경험치 {data.status.exp}/{data.status.NextExp}";
         messageText.text = BuildMessage(data);
         gardenText.text = gameManager.GetGardenName();
-        dexText.text = $"Dex {gameManager.GetDexUnlockedCount()}/5";
+        dexText.text = $"도감 {gameManager.GetDexUnlockedCount()}/5";
         hungerBar.SetValue(data.status.hunger);
         happinessBar.SetValue(data.status.happiness);
         cleanlinessBar.SetValue(data.status.cleanliness);
@@ -62,22 +63,22 @@ public sealed class UIManager : MonoBehaviour
     {
         if (data.status.isSick)
         {
-            return $"{gameManager.LastMessage}  PUNI feels sick.";
+            return $"{gameManager.LastMessage}  푸니가 아파요.";
         }
 
         if (data.status.isHungry)
         {
-            return $"{gameManager.LastMessage}  PUNI is hungry.";
+            return $"{gameManager.LastMessage}  푸니가 배고파요.";
         }
 
         if (data.status.isDirty)
         {
-            return $"{gameManager.LastMessage}  PUNI needs a bath.";
+            return $"{gameManager.LastMessage}  푸니가 씻고 싶어해요.";
         }
 
         if (data.status.isSulking)
         {
-            return $"{gameManager.LastMessage}  PUNI feels lonely.";
+            return $"{gameManager.LastMessage}  푸니가 외로워해요.";
         }
 
         return $"{gameManager.LastMessage}  {gameManager.GetEvolutionHint()}";
@@ -114,24 +115,26 @@ public sealed class UIManager : MonoBehaviour
 
         puniView = new PuniView(canvasObject.transform);
 
-        hungerBar = new StatusBarView(canvasObject.transform, "Hunger", new Vector2(0f, -710f), new Color(0.96f, 0.55f, 0.45f));
-        happinessBar = new StatusBarView(canvasObject.transform, "Happy", new Vector2(0f, -750f), new Color(1f, 0.78f, 0.30f));
-        cleanlinessBar = new StatusBarView(canvasObject.transform, "Clean", new Vector2(0f, -790f), new Color(0.34f, 0.72f, 0.92f));
-        energyBar = new StatusBarView(canvasObject.transform, "Energy", new Vector2(0f, -830f), new Color(0.46f, 0.72f, 0.50f));
-        affectionBar = new StatusBarView(canvasObject.transform, "Love", new Vector2(0f, -870f), new Color(0.92f, 0.48f, 0.76f));
+        hungerBar = new StatusBarView(canvasObject.transform, "배고픔", new Vector2(0f, -710f), new Color(0.96f, 0.55f, 0.45f));
+        happinessBar = new StatusBarView(canvasObject.transform, "행복", new Vector2(0f, -750f), new Color(1f, 0.78f, 0.30f));
+        cleanlinessBar = new StatusBarView(canvasObject.transform, "청결", new Vector2(0f, -790f), new Color(0.34f, 0.72f, 0.92f));
+        energyBar = new StatusBarView(canvasObject.transform, "에너지", new Vector2(0f, -830f), new Color(0.46f, 0.72f, 0.50f));
+        affectionBar = new StatusBarView(canvasObject.transform, "애정", new Vector2(0f, -870f), new Color(0.92f, 0.48f, 0.76f));
 
-        feedButton = CreateButton(canvasObject.transform, "Feed", new Vector2(-188f, 285f), () => gameManager.PerformCare(CareActionType.Feed));
-        playButton = CreateButton(canvasObject.transform, "Play", new Vector2(0f, 285f), () => gameManager.PerformCare(CareActionType.Play));
-        cleanButton = CreateButton(canvasObject.transform, "Clean", new Vector2(188f, 285f), () => gameManager.PerformCare(CareActionType.Clean));
-        sleepButton = CreateButton(canvasObject.transform, "Sleep", new Vector2(-188f, 220f), () => gameManager.PerformCare(CareActionType.Sleep));
-        studyButton = CreateButton(canvasObject.transform, "Study", new Vector2(0f, 220f), () => gameManager.PerformCare(CareActionType.Study));
-        trainButton = CreateButton(canvasObject.transform, "Train", new Vector2(188f, 220f), () => gameManager.PerformCare(CareActionType.Train));
-        CreateButton(canvasObject.transform, "Dex", new Vector2(-94f, 155f), ShowDexGarden);
-        CreateButton(canvasObject.transform, "Snack Tap", new Vector2(94f, 155f), StartMiniGame);
-        CreateButton(canvasObject.transform, "Free Snack", new Vector2(-188f, 90f), () => gameManager.WatchAdForFreeSnack());
-        CreateButton(canvasObject.transform, "Recover", new Vector2(0f, 90f), () => gameManager.WatchAdForRecovery());
-        CreateButton(canvasObject.transform, "Debug", new Vector2(188f, 90f), ShowDebug);
+        feedButton = CreateButton(canvasObject.transform, "먹이", new Vector2(-188f, 285f), () => gameManager.PerformCare(CareActionType.Feed));
+        playButton = CreateButton(canvasObject.transform, "놀기", new Vector2(0f, 285f), () => gameManager.PerformCare(CareActionType.Play));
+        cleanButton = CreateButton(canvasObject.transform, "청소", new Vector2(188f, 285f), () => gameManager.PerformCare(CareActionType.Clean));
+        sleepButton = CreateButton(canvasObject.transform, "잠", new Vector2(-188f, 220f), () => gameManager.PerformCare(CareActionType.Sleep));
+        studyButton = CreateButton(canvasObject.transform, "공부", new Vector2(0f, 220f), () => gameManager.PerformCare(CareActionType.Study));
+        trainButton = CreateButton(canvasObject.transform, "훈련", new Vector2(188f, 220f), () => gameManager.PerformCare(CareActionType.Train));
+        CreateButton(canvasObject.transform, "도감", new Vector2(-94f, 155f), ShowDexGarden);
+        CreateButton(canvasObject.transform, "스낵 탭", new Vector2(94f, 155f), StartMiniGame);
+        CreateButton(canvasObject.transform, "무료 간식", new Vector2(-188f, 90f), () => gameManager.WatchAdForFreeSnack());
+        CreateButton(canvasObject.transform, "회복", new Vector2(0f, 90f), () => gameManager.WatchAdForRecovery());
+        CreateButton(canvasObject.transform, "가이드", new Vector2(188f, 90f), ShowGrowthGuide);
+        CreateButton(canvasObject.transform, "디버그", new Vector2(0f, 28f), ShowDebug);
         dexGardenPanel = new DexGardenPanel(canvasObject.transform);
+        growthGuidePanel = new GrowthGuidePanel(canvasObject.transform);
         debugPanel = new DebugPanel(canvasObject.transform);
         built = true;
     }
@@ -179,6 +182,11 @@ public sealed class UIManager : MonoBehaviour
         dexGardenPanel.Show(gameManager.GetSaveData(), gameManager.GetGardenName(), gameManager.GetDexUnlockedCount());
     }
 
+    private void ShowGrowthGuide()
+    {
+        growthGuidePanel.Show();
+    }
+
     private void ShowDebug()
     {
         debugPanel.Show(gameManager);
@@ -198,7 +206,7 @@ public sealed class UIManager : MonoBehaviour
         var textObject = new GameObject(name);
         textObject.transform.SetParent(parent, false);
         var text = textObject.AddComponent<Text>();
-        text.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+        text.font = PuniFonts.Default;
         text.fontSize = fontSize;
         text.alignment = alignment;
         text.horizontalOverflow = HorizontalWrapMode.Wrap;
@@ -232,7 +240,7 @@ public sealed class UIManager : MonoBehaviour
         var labelObject = new GameObject("Text");
         labelObject.transform.SetParent(buttonObject.transform, false);
         var text = labelObject.AddComponent<Text>();
-        text.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+        text.font = PuniFonts.Default;
         text.text = label;
         text.fontSize = 22;
         text.alignment = TextAnchor.MiddleCenter;

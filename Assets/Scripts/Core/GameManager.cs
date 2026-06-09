@@ -12,7 +12,7 @@ public sealed class GameManager : MonoBehaviour
     private AdManager adManager;
 
     public PuniController Puni { get; private set; }
-    public string LastMessage { get; private set; } = "Welcome to PUNI Life";
+    public string LastMessage { get; private set; } = "푸니 라이프에 오신 것을 환영해요.";
     public int LastOfflineHours { get; private set; }
     public OfflineProgressResult LastOfflineProgress { get; private set; }
 
@@ -79,7 +79,7 @@ public sealed class GameManager : MonoBehaviour
         Puni.Data.status.happiness += 10;
         Puni.Data.status.AddExp(5);
         Puni.Data.status.Clamp();
-        LastMessage = $"Snack Tap reward +{coin} coins";
+        LastMessage = $"스낵 탭 보상으로 코인 {coin}개를 받았어요.";
         Save();
         uiManager.Refresh();
     }
@@ -108,7 +108,7 @@ public sealed class GameManager : MonoBehaviour
             Puni.Data.growthStats.kindness += 1;
             Puni.Data.status.Clamp();
             Puni.Data.growthStats.Clamp();
-            LastMessage = "PUNI received a free snack";
+            LastMessage = "푸니가 무료 간식을 받았어요.";
             Save();
             uiManager.Refresh();
         });
@@ -125,7 +125,7 @@ public sealed class GameManager : MonoBehaviour
             Puni.Data.growthStats.neglect = Mathf.Max(0, Puni.Data.growthStats.neglect - 5);
             Puni.Data.status.Clamp();
             Puni.Data.growthStats.Clamp();
-            LastMessage = "PUNI recovered";
+            LastMessage = "푸니의 컨디션이 회복됐어요.";
             Save();
             uiManager.Refresh();
         });
@@ -181,7 +181,7 @@ public sealed class GameManager : MonoBehaviour
     {
         Puni.Data.status.AddExp(amount);
         EvolutionUpdateResult result = Puni.RefreshProgress();
-        LastMessage = result.evolved ? $"Debug evolved into {Puni.Data.evolutionType}" : $"Debug EXP +{amount}";
+        LastMessage = result.evolved ? $"디버그: {PuniText.EvolutionName(Puni.Data.evolutionType)} 진화" : $"디버그: 경험치 +{amount}";
         Save();
         uiManager.Refresh();
     }
@@ -191,7 +191,7 @@ public sealed class GameManager : MonoBehaviour
         Puni.Data.lastSavedAt = DateTime.UtcNow.AddHours(-hours).ToString("O");
         LastOfflineProgress = offlineProgressSystem.Apply(Puni.Data);
         LastOfflineHours = LastOfflineProgress.hours;
-        LastMessage = $"Debug offline {LastOfflineHours}h applied";
+        LastMessage = $"디버그: 오프라인 {LastOfflineHours}시간 적용";
         Save();
         uiManager.Refresh();
     }
@@ -203,7 +203,7 @@ public sealed class GameManager : MonoBehaviour
         Puni.Data.status.exp = 0;
         Puni.Data.status.energy = Constants.StatusMax;
         EvolutionUpdateResult result = Puni.RefreshProgress();
-        LastMessage = result.evolved ? $"Debug evolved into {Puni.Data.evolutionType}" : "Debug evolution did not trigger";
+        LastMessage = result.evolved ? $"디버그: {PuniText.EvolutionName(Puni.Data.evolutionType)} 진화" : "디버그: 진화 조건이 부족해요.";
         Save();
         uiManager.Refresh();
     }
@@ -221,7 +221,7 @@ public sealed class GameManager : MonoBehaviour
         Puni = new PuniController(data, new CareSystem(), evolutionSystem, dexManager, gardenManager);
         gardenManager.UpdateGardenLevel(data, dexManager);
         LastMessage = LastOfflineProgress.HasProgress
-            ? $"{LastOfflineHours} offline hours passed. PUNI missed you."
-            : "Welcome to PUNI Life";
+            ? $"{LastOfflineHours}시간 동안 자리를 비웠어요. 푸니가 기다리고 있었어요."
+            : "푸니 라이프에 오신 것을 환영해요.";
     }
 }

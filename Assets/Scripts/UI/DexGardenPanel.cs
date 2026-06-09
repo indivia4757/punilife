@@ -46,14 +46,14 @@ public sealed class DexGardenPanel
 
     public void Refresh(SaveData data, string gardenName, int unlockedCount)
     {
-        titleText.text = "PUNI Dex";
-        gardenText.text = $"Garden: {gardenName}\nRestoration {unlockedCount}/5";
+        titleText.text = "푸니 도감";
+        gardenText.text = $"정원: {gardenName}\n복원도 {unlockedCount}/5";
 
-        SetEntry(entryTexts[0], data, PuniEvolutionType.Sunny, "Sunny PUNI", "Happy and loved");
-        SetEntry(entryTexts[1], data, PuniEvolutionType.Scholar, "Scholar PUNI", "Raised through study");
-        SetEntry(entryTexts[2], data, PuniEvolutionType.Brave, "Brave PUNI", "Raised through training");
-        SetEntry(entryTexts[3], data, PuniEvolutionType.Forest, "Forest PUNI", "Kind and clean");
-        SetEntry(entryTexts[4], data, PuniEvolutionType.Shadow, "Shadow PUNI", "Lonely but precious");
+        SetEntry(entryTexts[0], data, PuniEvolutionType.Sunny, PuniText.EvolutionName(PuniEvolutionType.Sunny), "행복과 애정이 높은 푸니");
+        SetEntry(entryTexts[1], data, PuniEvolutionType.Scholar, PuniText.EvolutionName(PuniEvolutionType.Scholar), "공부를 많이 한 푸니");
+        SetEntry(entryTexts[2], data, PuniEvolutionType.Brave, PuniText.EvolutionName(PuniEvolutionType.Brave), "훈련을 많이 한 푸니");
+        SetEntry(entryTexts[3], data, PuniEvolutionType.Forest, PuniText.EvolutionName(PuniEvolutionType.Forest), "친절하고 깨끗한 푸니");
+        SetEntry(entryTexts[4], data, PuniEvolutionType.Shadow, PuniText.EvolutionName(PuniEvolutionType.Shadow), "외로웠지만 소중한 푸니");
     }
 
     private void CreateCloseButton(Transform parent)
@@ -74,7 +74,7 @@ public sealed class DexGardenPanel
         rect.sizeDelta = new Vector2(190f, 58f);
 
         var text = CreateText(buttonObject.transform, "Text", Vector2.zero, new Vector2(190f, 58f), 22, TextAnchor.MiddleCenter);
-        text.text = "Close";
+        text.text = "닫기";
         text.color = Color.white;
         text.rectTransform.anchorMin = Vector2.zero;
         text.rectTransform.anchorMax = Vector2.one;
@@ -94,7 +94,7 @@ public sealed class DexGardenPanel
     {
         if (!DateTime.TryParse(isoDate, out DateTime dateTime))
         {
-            return "Unlocked";
+            return "발견 완료";
         }
 
         return dateTime.ToLocalTime().ToString("yyyy-MM-dd");
@@ -118,7 +118,7 @@ public sealed class DexGardenPanel
         var textObject = new GameObject(name);
         textObject.transform.SetParent(parent, false);
         var text = textObject.AddComponent<Text>();
-        text.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+        text.font = PuniFonts.Default;
         text.fontSize = fontSize;
         text.alignment = alignment;
         text.horizontalOverflow = HorizontalWrapMode.Wrap;

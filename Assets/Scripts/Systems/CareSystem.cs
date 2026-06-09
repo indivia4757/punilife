@@ -11,19 +11,19 @@ public sealed class CareSystem
 
         if (!IsUnlocked(action, data.stage))
         {
-            message = "This action unlocks when PUNI grows up";
+            message = "푸니가 더 성장하면 사용할 수 있어요.";
             return false;
         }
 
         if (effect.coin < 0 && status.coin < -effect.coin)
         {
-            message = "Not enough coins";
+            message = "코인이 부족해요.";
             return false;
         }
 
         if (effect.energy < 0 && status.energy < -effect.energy)
         {
-            message = "PUNI is tired";
+            message = "푸니가 피곤해요.";
             return false;
         }
 
@@ -58,7 +58,7 @@ public sealed class CareSystem
                 affection: 3,
                 coin: -10,
                 kindness: 1,
-                successMessage: "PUNI enjoyed the snack"),
+                successMessage: "푸니가 간식을 맛있게 먹었어요."),
             CareActionType.Play => new CareActionEffect(
                 happiness: 20,
                 energy: -10,
@@ -66,32 +66,32 @@ public sealed class CareSystem
                 exp: 5,
                 sensitivity: 3,
                 kindness: 2,
-                successMessage: "PUNI had fun"),
+                successMessage: "푸니가 신나게 놀았어요."),
             CareActionType.Clean => new CareActionEffect(
                 cleanliness: 30,
                 happiness: 5,
                 exp: 3,
                 kindness: 4,
-                successMessage: "PUNI is clean"),
+                successMessage: "푸니가 깨끗해졌어요."),
             CareActionType.Sleep => new CareActionEffect(
                 hunger: -5,
                 energy: 40,
                 sensitivity: 1,
-                successMessage: "PUNI rested"),
+                successMessage: "푸니가 푹 쉬었어요."),
             CareActionType.Study => new CareActionEffect(
                 happiness: -3,
                 energy: -10,
                 exp: 8,
                 intelligence: 5,
                 sensitivity: 1,
-                successMessage: "PUNI studied"),
+                successMessage: "푸니가 열심히 공부했어요."),
             CareActionType.Train => new CareActionEffect(
                 energy: -15,
                 exp: 8,
                 strength: 5,
                 courage: 3,
-                successMessage: "PUNI trained"),
-            _ => new CareActionEffect(successMessage: "PUNI feels normal")
+                successMessage: "푸니가 씩씩하게 훈련했어요."),
+            _ => new CareActionEffect(successMessage: "푸니가 평온해요.")
         };
     }
 

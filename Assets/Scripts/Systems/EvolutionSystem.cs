@@ -85,30 +85,30 @@ public sealed class EvolutionSystem
     {
         if (data.stage == PuniStage.Evolved)
         {
-            return $"{data.evolutionType} PUNI discovered";
+            return $"{PuniText.EvolutionName(data.evolutionType)}를 발견했어요.";
         }
 
         if (data.growthStats.neglect >= 35)
         {
-            return "Shadow path is close";
+            return "방치가 길어져 그림자 진화에 가까워졌어요.";
         }
 
         if (data.growthStats.kindness >= Constants.ForestKindnessThreshold && data.status.cleanliness >= 60)
         {
-            return "Forest path is close";
+            return "친절하고 깨끗해서 숲의 진화에 가까워졌어요.";
         }
 
         if (data.growthStats.intelligence >= Constants.ScholarIntelligenceThreshold)
         {
-            return "Scholar path is close";
+            return "공부를 많이 해서 학자 진화에 가까워졌어요.";
         }
 
         if (data.growthStats.strength >= Constants.BraveStrengthThreshold || data.growthStats.courage >= Constants.BraveCourageThreshold)
         {
-            return "Brave path is close";
+            return "훈련을 많이 해서 용감 진화에 가까워졌어요.";
         }
 
-        return "Care for PUNI to shape its future";
+        return "돌봄에 따라 푸니의 미래가 달라져요.";
     }
 
     private static int GetPlayedDays(SaveData data)

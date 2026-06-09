@@ -85,7 +85,7 @@ public sealed class StatusBarView
         var textObject = new GameObject(name);
         textObject.transform.SetParent(parent, false);
         var text = textObject.AddComponent<Text>();
-        text.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+        text.font = PuniFonts.Default;
         text.alignment = alignment;
         text.fontSize = 20;
         text.horizontalOverflow = HorizontalWrapMode.Overflow;

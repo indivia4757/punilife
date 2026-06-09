@@ -99,7 +99,7 @@ public sealed class PuniView
 
         ApplyMood(data.status);
         rootRect.localScale = GetScale(data.stage);
-        stageText.text = data.stage == PuniStage.Evolved ? $"{data.evolutionType} PUNI" : data.stage.ToString();
+        stageText.text = data.stage == PuniStage.Evolved ? PuniText.EvolutionName(data.evolutionType) : PuniText.StageName(data.stage);
     }
 
     private static Vector3 GetScale(PuniStage stage)
@@ -203,7 +203,7 @@ public sealed class PuniView
         var textObject = new GameObject(name);
         textObject.transform.SetParent(parent, false);
         var text = textObject.AddComponent<Text>();
-        text.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+        text.font = PuniFonts.Default;
         text.alignment = alignment;
         text.fontSize = fontSize;
         text.horizontalOverflow = HorizontalWrapMode.Wrap;

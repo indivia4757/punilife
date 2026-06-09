@@ -23,17 +23,17 @@ public sealed class DebugPanel
         rect.sizeDelta = new Vector2(620f, 760f);
 
         var title = CreateText(root.transform, "Title", new Vector2(0f, 320f), new Vector2(540f, 44f), 28, TextAnchor.MiddleCenter);
-        title.text = "Debug";
+        title.text = "디버그";
         title.color = Color.white;
 
         infoText = CreateText(root.transform, "Info", new Vector2(0f, 245f), new Vector2(540f, 110f), 19, TextAnchor.MiddleCenter);
         infoText.color = new Color(0.88f, 0.92f, 0.95f);
 
-        CreateButton(root.transform, "EXP +50", new Vector2(-150f, 130f), () => Run(() => gameManager.DebugAddExp(50)));
-        CreateButton(root.transform, "Offline 12h", new Vector2(150f, 130f), () => Run(() => gameManager.DebugSimulateOfflineHours(12)));
-        CreateButton(root.transform, "Force Evolve", new Vector2(-150f, 40f), () => Run(() => gameManager.DebugForceEvolution()));
-        CreateButton(root.transform, "Reset Save", new Vector2(150f, 40f), () => Run(() => gameManager.DebugResetSave()));
-        CreateButton(root.transform, "Close", new Vector2(0f, -265f), Hide);
+        CreateButton(root.transform, "경험치 +50", new Vector2(-150f, 130f), () => Run(() => gameManager.DebugAddExp(50)));
+        CreateButton(root.transform, "12시간 경과", new Vector2(150f, 130f), () => Run(() => gameManager.DebugSimulateOfflineHours(12)));
+        CreateButton(root.transform, "강제 진화", new Vector2(-150f, 40f), () => Run(() => gameManager.DebugForceEvolution()));
+        CreateButton(root.transform, "저장 초기화", new Vector2(150f, 40f), () => Run(() => gameManager.DebugResetSave()));
+        CreateButton(root.transform, "닫기", new Vector2(0f, -265f), Hide);
 
         root.SetActive(false);
     }
@@ -54,8 +54,8 @@ public sealed class DebugPanel
 
         SaveData data = gameManager.GetSaveData();
         infoText.text =
-            $"Stage {data.stage} / Evolution {data.evolutionType}\n" +
-            $"Lv.{data.status.level} EXP {data.status.exp}/{data.status.NextExp} Coin {data.status.coin}\n" +
+            $"단계 {PuniText.StageName(data.stage)} / 진화 {PuniText.EvolutionName(data.evolutionType)}\n" +
+            $"Lv.{data.status.level} 경험치 {data.status.exp}/{data.status.NextExp} 코인 {data.status.coin}\n" +
             $"INT {data.growthStats.intelligence} STR {data.growthStats.strength} SEN {data.growthStats.sensitivity} " +
             $"COU {data.growthStats.courage} KIN {data.growthStats.kindness} NEG {data.growthStats.neglect}";
     }
@@ -102,7 +102,7 @@ public sealed class DebugPanel
         var textObject = new GameObject(name);
         textObject.transform.SetParent(parent, false);
         var text = textObject.AddComponent<Text>();
-        text.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+        text.font = PuniFonts.Default;
         text.fontSize = fontSize;
         text.alignment = alignment;
         text.horizontalOverflow = HorizontalWrapMode.Wrap;

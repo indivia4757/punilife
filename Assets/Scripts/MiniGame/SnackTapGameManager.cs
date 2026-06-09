@@ -124,9 +124,9 @@ public sealed class SnackTapGameManager : MonoBehaviour
             return;
         }
 
-        timerText.text = $"Time {Mathf.CeilToInt(Mathf.Max(0f, remainingTime))}";
-        scoreText.text = $"Score {score}";
-        comboText.text = combo > 1 ? $"Combo {combo}" : string.Empty;
+        timerText.text = $"시간 {Mathf.CeilToInt(Mathf.Max(0f, remainingTime))}";
+        scoreText.text = $"점수 {score}";
+        comboText.text = combo > 1 ? $"콤보 {combo}" : string.Empty;
     }
 
     private void ShowResult()
@@ -144,13 +144,13 @@ public sealed class SnackTapGameManager : MonoBehaviour
         rect.sizeDelta = new Vector2(500f, 360f);
 
         var title = CreateText(resultPanel.transform, "Title", new Vector2(0f, 105f), new Vector2(430f, 54f), 30, TextAnchor.MiddleCenter);
-        title.text = "Snack Tap";
+        title.text = "스낵 탭";
 
         var result = CreateText(resultPanel.transform, "Result", new Vector2(0f, 35f), new Vector2(430f, 84f), 24, TextAnchor.MiddleCenter);
-        result.text = $"Score {score}\nCoins +{score * 2}";
+        result.text = $"점수 {score}\n코인 +{score * 2}";
 
-        CreateButton(resultPanel.transform, "Claim", new Vector2(-115f, -105f), () => ClaimReward(false));
-        CreateButton(resultPanel.transform, "2x Ad", new Vector2(115f, -105f), () => ClaimReward(true));
+        CreateButton(resultPanel.transform, "받기", new Vector2(-115f, -105f), () => ClaimReward(false));
+        CreateButton(resultPanel.transform, "광고 2배", new Vector2(115f, -105f), () => ClaimReward(true));
     }
 
     private void ClaimReward(bool doubled)
@@ -195,7 +195,7 @@ public sealed class SnackTapGameManager : MonoBehaviour
         var textObject = new GameObject(name);
         textObject.transform.SetParent(parent, false);
         var text = textObject.AddComponent<Text>();
-        text.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+        text.font = PuniFonts.Default;
         text.fontSize = fontSize;
         text.alignment = alignment;
         text.color = new Color(0.18f, 0.21f, 0.23f);

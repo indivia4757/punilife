@@ -33,11 +33,11 @@ public sealed class PuniController
         gardenManager.UpdateGardenLevel(Data, dexManager);
         if (evolutionResult.evolved)
         {
-            message = $"Evolved into {Data.evolutionType} PUNI";
+            message = $"{PuniText.EvolutionName(Data.evolutionType)}로 진화했어요.";
         }
         else if (evolutionResult.stageChanged)
         {
-            message = $"PUNI grew into {Data.stage}";
+            message = $"{PuniText.StageName(Data.stage)}로 성장했어요.";
         }
 
         return true;
