@@ -35,6 +35,7 @@ public static class PuniLifeBootstrap
         if (Object.FindAnyObjectByType<GameManager>() == null)
         {
             var gameObject = new GameObject("GameManager");
+            gameObject.AddComponent<AudioManager>();
             gameObject.AddComponent<AdManager>();
             gameObject.AddComponent<GameManager>();
         }

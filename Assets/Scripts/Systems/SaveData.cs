@@ -7,6 +7,7 @@ public sealed class SaveData
     public int version = Constants.SaveDataVersion;
     public PuniStatus status = new PuniStatus();
     public PuniGrowthStats growthStats = new PuniGrowthStats();
+    public string puniName = "푸니";
     public PuniStage stage = PuniStage.Egg;
     public PuniEvolutionType evolutionType = PuniEvolutionType.None;
     public List<PuniDexEntry> dexEntries = new List<PuniDexEntry>();
@@ -48,6 +49,10 @@ public sealed class SaveData
             ownedItemIds = new List<int>();
         }
         version = Constants.SaveDataVersion;
+        if (string.IsNullOrWhiteSpace(puniName))
+        {
+            puniName = "푸니";
+        }
 
         EnsureDexEntry(PuniEvolutionType.Sunny);
         EnsureDexEntry(PuniEvolutionType.Scholar);

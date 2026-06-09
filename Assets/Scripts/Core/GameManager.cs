@@ -10,6 +10,7 @@ public sealed class GameManager : MonoBehaviour
     private GardenManager gardenManager;
     private UIManager uiManager;
     private AdManager adManager;
+    private AudioManager audioManager;
 
     public PuniController Puni { get; private set; }
     public string LastMessage { get; private set; } = "푸니 라이프에 오신 것을 환영해요.";
@@ -23,6 +24,12 @@ public sealed class GameManager : MonoBehaviour
         evolutionSystem = new EvolutionSystem();
         dexManager = new DexManager();
         gardenManager = new GardenManager();
+        audioManager = GetComponent<AudioManager>();
+        if (audioManager == null)
+        {
+            audioManager = gameObject.AddComponent<AudioManager>();
+        }
+
         adManager = GetComponent<AdManager>();
         if (adManager == null)
         {
@@ -58,16 +65,44 @@ public sealed class GameManager : MonoBehaviour
 
     public void PerformCare(CareActionType action)
     {
+        PuniStage previousStage = Puni.Data.stage;
+        PuniEvolutionType previousEvolution = Puni.Data.evolutionType;
         if (Puni.PerformCare(action, out string message))
         {
             LastMessage = message;
+            if (Puni.Data.stage == PuniStage.Evolved &&
+                (previousStage != PuniStage.Evolved || previousEvolution != Puni.Data.evolutionType))
+            {
+                audioManager.PlayEvolution();
+            }
+            else
+            {
+                audioManager.PlayCareSuccess();
+            }
+
             Save();
         }
         else
         {
             LastMessage = message;
+            audioManager.PlayError();
         }
 
+        uiManager.Refresh();
+    }
+
+    public void RenamePuni(string rawName)
+    {
+        string name = string.IsNullOrWhiteSpace(rawName) ? "푸니" : rawName.Trim();
+        if (name.Length > 10)
+        {
+            name = name.Substring(0, 10);
+        }
+
+        Puni.Data.puniName = name;
+        LastMessage = $"{name}(으)로 이름을 정했어요.";
+        audioManager.PlayReward();
+        Save();
         uiManager.Refresh();
     }
 
@@ -80,6 +115,7 @@ public sealed class GameManager : MonoBehaviour
         Puni.Data.status.AddExp(5);
         Puni.Data.status.Clamp();
         LastMessage = $"스낵 탭 보상으로 코인 {coin}개를 받았어요.";
+        audioManager.PlayReward();
         Save();
         uiManager.Refresh();
     }
@@ -109,6 +145,7 @@ public sealed class GameManager : MonoBehaviour
             Puni.Data.status.Clamp();
             Puni.Data.growthStats.Clamp();
             LastMessage = "푸니가 무료 간식을 받았어요.";
+            audioManager.PlayReward();
             Save();
             uiManager.Refresh();
         });
@@ -126,6 +163,7 @@ public sealed class GameManager : MonoBehaviour
             Puni.Data.status.Clamp();
             Puni.Data.growthStats.Clamp();
             LastMessage = "푸니의 컨디션이 회복됐어요.";
+            audioManager.PlayReward();
             Save();
             uiManager.Refresh();
         });
@@ -182,6 +220,11 @@ public sealed class GameManager : MonoBehaviour
         Puni.Data.status.AddExp(amount);
         EvolutionUpdateResult result = Puni.RefreshProgress();
         LastMessage = result.evolved ? $"디버그: {PuniText.EvolutionName(Puni.Data.evolutionType)} 진화" : $"디버그: 경험치 +{amount}";
+        if (result.evolved)
+        {
+            audioManager.PlayEvolution();
+        }
+
         Save();
         uiManager.Refresh();
     }
@@ -204,6 +247,11 @@ public sealed class GameManager : MonoBehaviour
         Puni.Data.status.energy = Constants.StatusMax;
         EvolutionUpdateResult result = Puni.RefreshProgress();
         LastMessage = result.evolved ? $"디버그: {PuniText.EvolutionName(Puni.Data.evolutionType)} 진화" : "디버그: 진화 조건이 부족해요.";
+        if (result.evolved)
+        {
+            audioManager.PlayEvolution();
+        }
+
         Save();
         uiManager.Refresh();
     }
@@ -219,9 +267,25 @@ public sealed class GameManager : MonoBehaviour
         LastOfflineProgress = offlineProgressSystem.Apply(data);
         LastOfflineHours = LastOfflineProgress.hours;
         Puni = new PuniController(data, new CareSystem(), evolutionSystem, dexManager, gardenManager);
+        EvolutionUpdateResult evolutionResult = Puni.RefreshProgress();
         gardenManager.UpdateGardenLevel(data, dexManager);
         LastMessage = LastOfflineProgress.HasProgress
-            ? $"{LastOfflineHours}시간 동안 자리를 비웠어요. 푸니가 기다리고 있었어요."
+            ? BuildOfflineMessage(evolutionResult)
             : "푸니 라이프에 오신 것을 환영해요.";
+    }
+
+    private string BuildOfflineMessage(EvolutionUpdateResult evolutionResult)
+    {
+        if (evolutionResult.evolved)
+        {
+            return $"{LastOfflineHours}시간 동안 조금 성장해서 {PuniText.EvolutionName(Puni.Data.evolutionType)}로 진화했어요.";
+        }
+
+        if (evolutionResult.stageChanged)
+        {
+            return $"{LastOfflineHours}시간 동안 조금 성장해서 {PuniText.StageName(Puni.Data.stage)}가 됐어요.";
+        }
+
+        return $"{LastOfflineHours}시간 동안 조금 성장했어요. 경험치 +{LastOfflineProgress.expDelta}";
     }
 }

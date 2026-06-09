@@ -21,11 +21,13 @@ public sealed class OfflineProgressSystem
         int happinessDelta = -(hours * 3);
         int cleanlinessDelta = -(hours * 4);
         int energyDelta = hours * 5;
+        int expDelta = Mathf.Clamp(Mathf.CeilToInt(hours * 0.5f), 1, Constants.MaxOfflineExp);
 
         data.status.hunger += hungerDelta;
         data.status.happiness += happinessDelta;
         data.status.cleanliness += cleanlinessDelta;
         data.status.energy += energyDelta;
+        data.status.AddExp(expDelta);
 
         int lowStatusCount = 0;
         if (data.status.hunger <= 0)
@@ -54,6 +56,7 @@ public sealed class OfflineProgressSystem
             happinessDelta,
             cleanlinessDelta,
             energyDelta,
+            expDelta,
             neglectDelta,
             lowStatusCount);
     }

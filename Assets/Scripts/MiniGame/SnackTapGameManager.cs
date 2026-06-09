@@ -95,6 +95,12 @@ public sealed class SnackTapGameManager : MonoBehaviour
 
         score++;
         combo++;
+        AudioManager audioManager = FindAnyObjectByType<AudioManager>();
+        if (audioManager != null)
+        {
+            audioManager.PlaySnack();
+        }
+
         RefreshHud();
         Destroy(item.gameObject);
     }

@@ -10,6 +10,7 @@ public static class Constants
     public const int InitialAffection = 10;
     public const int InitialCoin = 100;
     public const int MaxOfflineHours = 24;
+    public const int MaxOfflineExp = 12;
     public const int YoungUnlockLevel = 4;
     public const int EvolutionLevel = 10;
     public const int EvolutionPlayDays = 3;

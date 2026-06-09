@@ -18,12 +18,12 @@ public sealed class GrowthGuidePanel
         rect.anchorMax = new Vector2(0.5f, 0.5f);
         rect.pivot = new Vector2(0.5f, 0.5f);
         rect.anchoredPosition = new Vector2(0f, 10f);
-        rect.sizeDelta = new Vector2(620f, 820f);
+        rect.sizeDelta = new Vector2(620f, 930f);
 
-        var title = CreateText(root.transform, "Title", new Vector2(0f, 355f), new Vector2(540f, 52f), 32, TextAnchor.MiddleCenter);
+        var title = CreateText(root.transform, "Title", new Vector2(0f, 405f), new Vector2(540f, 52f), 32, TextAnchor.MiddleCenter);
         title.text = "성장 가이드";
 
-        var body = CreateText(root.transform, "Body", new Vector2(0f, 35f), new Vector2(540f, 560f), 22, TextAnchor.UpperLeft);
+        var body = CreateText(root.transform, "Body", new Vector2(0f, 40f), new Vector2(540f, 675f), 21, TextAnchor.UpperLeft);
         body.text =
             "푸니는 돌봄과 경험치로 성장합니다.\n\n" +
             "성장 단계\n" +
@@ -37,6 +37,12 @@ public sealed class GrowthGuidePanel
             "- 잠: 아기 단계부터 가능, 에너지 회복\n" +
             "- 공부: 어린 푸니부터 가능, 학자 진화에 영향\n" +
             "- 훈련: 어린 푸니부터 가능, 용감 진화에 영향\n\n" +
+            "오프라인 성장\n" +
+            "- 앱을 꺼둔 동안에도 경험치가 조금 쌓입니다.\n" +
+            "- 최대 24시간까지 계산되고, 경험치는 최대 12까지 얻습니다.\n" +
+            "- 대신 배고픔, 행복, 청결이 떨어지고 방치 수치가 오릅니다.\n\n" +
+            "이름\n" +
+            "- 이름 버튼으로 푸니의 이름을 바꿀 수 있습니다.\n\n" +
             "진화 방향\n" +
             "- 행복과 애정이 높으면 햇살 푸니\n" +
             "- 공부를 많이 하면 학자 푸니\n" +
@@ -68,7 +74,7 @@ public sealed class GrowthGuidePanel
         rect.anchorMin = new Vector2(0.5f, 0.5f);
         rect.anchorMax = new Vector2(0.5f, 0.5f);
         rect.pivot = new Vector2(0.5f, 0.5f);
-        rect.anchoredPosition = new Vector2(0f, -345f);
+        rect.anchoredPosition = new Vector2(0f, -400f);
         rect.sizeDelta = new Vector2(190f, 58f);
 
         var text = CreateText(buttonObject.transform, "Text", Vector2.zero, new Vector2(190f, 58f), 22, TextAnchor.MiddleCenter);

@@ -3,13 +3,14 @@ using System;
 [Serializable]
 public readonly struct OfflineProgressResult
 {
-    public static readonly OfflineProgressResult None = new OfflineProgressResult(0, 0, 0, 0, 0, 0, 0);
+    public static readonly OfflineProgressResult None = new OfflineProgressResult(0, 0, 0, 0, 0, 0, 0, 0);
 
     public readonly int hours;
     public readonly int hungerDelta;
     public readonly int happinessDelta;
     public readonly int cleanlinessDelta;
     public readonly int energyDelta;
+    public readonly int expDelta;
     public readonly int neglectDelta;
     public readonly int lowStatusCount;
 
@@ -21,6 +22,7 @@ public readonly struct OfflineProgressResult
         int happinessDelta,
         int cleanlinessDelta,
         int energyDelta,
+        int expDelta,
         int neglectDelta,
         int lowStatusCount)
     {
@@ -29,6 +31,7 @@ public readonly struct OfflineProgressResult
         this.happinessDelta = happinessDelta;
         this.cleanlinessDelta = cleanlinessDelta;
         this.energyDelta = energyDelta;
+        this.expDelta = expDelta;
         this.neglectDelta = neglectDelta;
         this.lowStatusCount = lowStatusCount;
     }

@@ -8,6 +8,7 @@ public sealed class UIManager : MonoBehaviour
     private Text titleText;
     private Text coinText;
     private Text levelText;
+    private Text nameText;
     private Text messageText;
     private Text gardenText;
     private Text dexText;
@@ -19,6 +20,7 @@ public sealed class UIManager : MonoBehaviour
     private PuniView puniView;
     private DexGardenPanel dexGardenPanel;
     private GrowthGuidePanel growthGuidePanel;
+    private NameEditPanel nameEditPanel;
     private DebugPanel debugPanel;
     private Button feedButton;
     private Button playButton;
@@ -46,6 +48,7 @@ public sealed class UIManager : MonoBehaviour
         titleText.text = "푸니 라이프";
         coinText.text = $"코인 {data.status.coin}";
         levelText.text = $"Lv.{data.status.level}  경험치 {data.status.exp}/{data.status.NextExp}";
+        nameText.text = data.puniName;
         messageText.text = BuildMessage(data);
         gardenText.text = gameManager.GetGardenName();
         dexText.text = $"도감 {gameManager.GetDexUnlockedCount()}/5";
@@ -112,6 +115,7 @@ public sealed class UIManager : MonoBehaviour
         gardenText = CreateText(canvasObject.transform, "Garden", new Vector2(-180f, -96f), new Vector2(300f, 34f), 20, TextAnchor.MiddleLeft);
         dexText = CreateText(canvasObject.transform, "Dex", new Vector2(230f, -96f), new Vector2(220f, 34f), 20, TextAnchor.MiddleRight);
         messageText = CreateText(canvasObject.transform, "Message", new Vector2(0f, -145f), new Vector2(610f, 64f), 21, TextAnchor.MiddleCenter);
+        nameText = CreateText(canvasObject.transform, "PuniName", new Vector2(0f, -218f), new Vector2(420f, 44f), 28, TextAnchor.MiddleCenter);
 
         puniView = new PuniView(canvasObject.transform);
 
@@ -132,9 +136,11 @@ public sealed class UIManager : MonoBehaviour
         CreateButton(canvasObject.transform, "무료 간식", new Vector2(-188f, 90f), () => gameManager.WatchAdForFreeSnack());
         CreateButton(canvasObject.transform, "회복", new Vector2(0f, 90f), () => gameManager.WatchAdForRecovery());
         CreateButton(canvasObject.transform, "가이드", new Vector2(188f, 90f), ShowGrowthGuide);
-        CreateButton(canvasObject.transform, "디버그", new Vector2(0f, 28f), ShowDebug);
+        CreateButton(canvasObject.transform, "이름", new Vector2(-94f, 28f), ShowNameEdit);
+        CreateButton(canvasObject.transform, "디버그", new Vector2(94f, 28f), ShowDebug);
         dexGardenPanel = new DexGardenPanel(canvasObject.transform);
         growthGuidePanel = new GrowthGuidePanel(canvasObject.transform);
+        nameEditPanel = new NameEditPanel(canvasObject.transform);
         debugPanel = new DebugPanel(canvasObject.transform);
         built = true;
     }
@@ -187,6 +193,11 @@ public sealed class UIManager : MonoBehaviour
         growthGuidePanel.Show();
     }
 
+    private void ShowNameEdit()
+    {
+        nameEditPanel.Show(gameManager.GetSaveData().puniName, gameManager.RenamePuni);
+    }
+
     private void ShowDebug()
     {
         debugPanel.Show(gameManager);
@@ -228,6 +239,7 @@ public sealed class UIManager : MonoBehaviour
         image.color = new Color(0.43f, 0.66f, 0.90f);
 
         var button = buttonObject.AddComponent<Button>();
+        button.onClick.AddListener(PlayButtonSound);
         button.onClick.AddListener(onClick);
 
         var rect = buttonObject.GetComponent<RectTransform>();
@@ -251,5 +263,14 @@ public sealed class UIManager : MonoBehaviour
         text.rectTransform.offsetMax = Vector2.zero;
 
         return button;
+    }
+
+    private static void PlayButtonSound()
+    {
+        AudioManager audioManager = Object.FindAnyObjectByType<AudioManager>();
+        if (audioManager != null)
+        {
+            audioManager.PlayButtonClick();
+        }
     }
 }
