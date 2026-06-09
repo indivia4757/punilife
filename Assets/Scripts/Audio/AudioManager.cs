@@ -1,25 +1,35 @@
+using System;
+using System.Reflection;
 using UnityEngine;
 
 public sealed class AudioManager : MonoBehaviour
 {
-    private AudioSource bgmSource;
-    private AudioSource sfxSource;
-    private AudioClip bgmClip;
-    private AudioClip buttonClip;
-    private AudioClip careClip;
-    private AudioClip errorClip;
-    private AudioClip evolutionClip;
-    private AudioClip rewardClip;
-    private AudioClip snackClip;
+    private Type audioClipType;
+    private Type audioSourceType;
+    private Component bgmSource;
+    private Component sfxSource;
+    private object bgmClip;
+    private object buttonClip;
+    private object careClip;
+    private object errorClip;
+    private object evolutionClip;
+    private object rewardClip;
+    private object snackClip;
+    private MethodInfo playMethod;
+    private MethodInfo playOneShotMethod;
 
     private void Awake()
     {
-        bgmSource = gameObject.AddComponent<AudioSource>();
-        bgmSource.loop = true;
-        bgmSource.volume = 0.14f;
+        if (!TryInitializeAudioTypes())
+        {
+            return;
+        }
 
-        sfxSource = gameObject.AddComponent<AudioSource>();
-        sfxSource.volume = 0.55f;
+        bgmSource = gameObject.AddComponent(audioSourceType);
+        sfxSource = gameObject.AddComponent(audioSourceType);
+        SetProperty(bgmSource, "loop", true);
+        SetProperty(bgmSource, "volume", 0.14f);
+        SetProperty(sfxSource, "volume", 0.55f);
 
         bgmClip = CreateBgmClip();
         buttonClip = CreateToneClip("ButtonClick", 660f, 0.05f, 0.22f, WaveType.Sine);
@@ -34,13 +44,19 @@ public sealed class AudioManager : MonoBehaviour
 
     public void PlayBgm()
     {
-        if (bgmSource.isPlaying)
+        if (bgmSource == null || bgmClip == null)
         {
             return;
         }
 
-        bgmSource.clip = bgmClip;
-        bgmSource.Play();
+        bool isPlaying = GetProperty<bool>(bgmSource, "isPlaying");
+        if (isPlaying)
+        {
+            return;
+        }
+
+        SetProperty(bgmSource, "clip", bgmClip);
+        playMethod?.Invoke(bgmSource, null);
     }
 
     public void PlayButtonClick()
@@ -73,15 +89,30 @@ public sealed class AudioManager : MonoBehaviour
         PlaySfx(snackClip);
     }
 
-    private void PlaySfx(AudioClip clip)
+    private bool TryInitializeAudioTypes()
     {
-        if (clip != null)
+        audioClipType = Type.GetType("UnityEngine.AudioClip, UnityEngine.AudioModule");
+        audioSourceType = Type.GetType("UnityEngine.AudioSource, UnityEngine.AudioModule");
+        if (audioClipType == null || audioSourceType == null)
         {
-            sfxSource.PlayOneShot(clip);
+            Debug.LogWarning("Audio module is disabled. PUNI Life will run without sound until the Audio built-in package is enabled.");
+            return false;
+        }
+
+        playMethod = audioSourceType.GetMethod("Play", Type.EmptyTypes);
+        playOneShotMethod = audioSourceType.GetMethod("PlayOneShot", new[] { audioClipType });
+        return playMethod != null && playOneShotMethod != null;
+    }
+
+    private void PlaySfx(object clip)
+    {
+        if (sfxSource != null && clip != null)
+        {
+            playOneShotMethod?.Invoke(sfxSource, new[] { clip });
         }
     }
 
-    private static AudioClip CreateBgmClip()
+    private object CreateBgmClip()
     {
         const int sampleRate = 44100;
         const float duration = 8f;
@@ -100,12 +131,10 @@ public sealed class AudioManager : MonoBehaviour
             samples[i] = (melody + harmony) * pulse;
         }
 
-        var clip = AudioClip.Create("PUNI_Code_BGM", sampleCount, 1, sampleRate, false);
-        clip.SetData(samples, 0);
-        return clip;
+        return CreateClip("PUNI_Code_BGM", samples, sampleRate);
     }
 
-    private static AudioClip CreateArpeggioClip(string name, float[] frequencies, float duration, float volume)
+    private object CreateArpeggioClip(string name, float[] frequencies, float duration, float volume)
     {
         const int sampleRate = 44100;
         int sampleCount = Mathf.CeilToInt(sampleRate * duration);
@@ -121,12 +150,10 @@ public sealed class AudioManager : MonoBehaviour
             samples[i] = Mathf.Sin(Mathf.PI * 2f * frequencies[noteIndex] * time) * volume * envelope;
         }
 
-        var clip = AudioClip.Create($"PUNI_{name}", sampleCount, 1, sampleRate, false);
-        clip.SetData(samples, 0);
-        return clip;
+        return CreateClip($"PUNI_{name}", samples, sampleRate);
     }
 
-    private static AudioClip CreateToneClip(string name, float frequency, float duration, float volume, WaveType waveType)
+    private object CreateToneClip(string name, float frequency, float duration, float volume, WaveType waveType)
     {
         const int sampleRate = 44100;
         int sampleCount = Mathf.CeilToInt(sampleRate * duration);
@@ -143,9 +170,29 @@ public sealed class AudioManager : MonoBehaviour
             samples[i] = wave * volume * envelope;
         }
 
-        var clip = AudioClip.Create($"PUNI_{name}", sampleCount, 1, sampleRate, false);
-        clip.SetData(samples, 0);
+        return CreateClip($"PUNI_{name}", samples, sampleRate);
+    }
+
+    private object CreateClip(string clipName, float[] samples, int sampleRate)
+    {
+        MethodInfo createMethod = audioClipType.GetMethod(
+            "Create",
+            new[] { typeof(string), typeof(int), typeof(int), typeof(int), typeof(bool) });
+        object clip = createMethod?.Invoke(null, new object[] { clipName, samples.Length, 1, sampleRate, false });
+        MethodInfo setDataMethod = audioClipType.GetMethod("SetData", new[] { typeof(float[]), typeof(int) });
+        setDataMethod?.Invoke(clip, new object[] { samples, 0 });
         return clip;
+    }
+
+    private static void SetProperty(object target, string propertyName, object value)
+    {
+        target?.GetType().GetProperty(propertyName)?.SetValue(target, value);
+    }
+
+    private static T GetProperty<T>(object target, string propertyName)
+    {
+        object value = target?.GetType().GetProperty(propertyName)?.GetValue(target);
+        return value is T typedValue ? typedValue : default;
     }
 
     private enum WaveType
