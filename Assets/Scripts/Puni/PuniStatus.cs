@@ -27,18 +27,35 @@ public sealed class PuniStatus
         energy = Mathf.Clamp(energy, Constants.StatusMin, Constants.StatusMax);
         affection = Mathf.Clamp(affection, Constants.StatusMin, Constants.StatusMax);
         coin = Mathf.Max(0, coin);
-        level = Mathf.Max(1, level);
+        level = Mathf.Clamp(level, 1, Constants.EvolutionLevel);
         exp = Mathf.Max(0, exp);
+        if (level >= Constants.EvolutionLevel)
+        {
+            exp = Mathf.Min(exp, NextExp);
+        }
+
         RefreshConditionFlags();
     }
 
     public void AddExp(int amount)
     {
+        if (level >= Constants.EvolutionLevel)
+        {
+            exp = NextExp;
+            Clamp();
+            return;
+        }
+
         exp += Mathf.Max(0, amount);
         while (exp >= NextExp && level < Constants.EvolutionLevel)
         {
             exp -= NextExp;
             level++;
+        }
+
+        if (level >= Constants.EvolutionLevel)
+        {
+            exp = NextExp;
         }
 
         Clamp();

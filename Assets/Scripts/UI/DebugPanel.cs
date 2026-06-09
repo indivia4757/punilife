@@ -55,9 +55,16 @@ public sealed class DebugPanel
         SaveData data = gameManager.GetSaveData();
         infoText.text =
             $"단계 {PuniText.StageName(data.stage)} / 진화 {PuniText.EvolutionName(data.evolutionType)}\n" +
-            $"Lv.{data.status.level} 경험치 {data.status.exp}/{data.status.NextExp} 코인 {data.status.coin}\n" +
+            $"{FormatLevel(data.status)} 코인 {data.status.coin}\n" +
             $"INT {data.growthStats.intelligence} STR {data.growthStats.strength} SEN {data.growthStats.sensitivity} " +
             $"COU {data.growthStats.courage} KIN {data.growthStats.kindness} NEG {data.growthStats.neglect}";
+    }
+
+    private static string FormatLevel(PuniStatus status)
+    {
+        return status.level >= Constants.EvolutionLevel
+            ? $"Lv.{status.level} 최고 레벨"
+            : $"Lv.{status.level} 경험치 {status.exp}/{status.NextExp}";
     }
 
     private void Run(System.Action action)

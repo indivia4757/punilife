@@ -47,7 +47,9 @@ public sealed class UIManager : MonoBehaviour
         SaveData data = gameManager.Puni.Data;
         titleText.text = "푸니 라이프";
         coinText.text = $"코인 {data.status.coin}";
-        levelText.text = $"Lv.{data.status.level}  경험치 {data.status.exp}/{data.status.NextExp}";
+        levelText.text = data.status.level >= Constants.EvolutionLevel
+            ? $"Lv.{data.status.level}  최고 레벨"
+            : $"Lv.{data.status.level}  경험치 {data.status.exp}/{data.status.NextExp}";
         nameText.text = data.puniName;
         messageText.text = BuildMessage(data);
         gardenText.text = gameManager.GetGardenName();
