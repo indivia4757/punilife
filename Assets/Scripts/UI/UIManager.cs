@@ -114,23 +114,23 @@ public sealed class UIManager : MonoBehaviour
 
         puniView = new PuniView(canvasObject.transform);
 
-        hungerBar = new StatusBarView(canvasObject.transform, "Hunger", new Vector2(0f, -760f), new Color(0.96f, 0.55f, 0.45f));
-        happinessBar = new StatusBarView(canvasObject.transform, "Happy", new Vector2(0f, -806f), new Color(1f, 0.78f, 0.30f));
-        cleanlinessBar = new StatusBarView(canvasObject.transform, "Clean", new Vector2(0f, -852f), new Color(0.34f, 0.72f, 0.92f));
-        energyBar = new StatusBarView(canvasObject.transform, "Energy", new Vector2(0f, -898f), new Color(0.46f, 0.72f, 0.50f));
-        affectionBar = new StatusBarView(canvasObject.transform, "Love", new Vector2(0f, -944f), new Color(0.92f, 0.48f, 0.76f));
+        hungerBar = new StatusBarView(canvasObject.transform, "Hunger", new Vector2(0f, -710f), new Color(0.96f, 0.55f, 0.45f));
+        happinessBar = new StatusBarView(canvasObject.transform, "Happy", new Vector2(0f, -750f), new Color(1f, 0.78f, 0.30f));
+        cleanlinessBar = new StatusBarView(canvasObject.transform, "Clean", new Vector2(0f, -790f), new Color(0.34f, 0.72f, 0.92f));
+        energyBar = new StatusBarView(canvasObject.transform, "Energy", new Vector2(0f, -830f), new Color(0.46f, 0.72f, 0.50f));
+        affectionBar = new StatusBarView(canvasObject.transform, "Love", new Vector2(0f, -870f), new Color(0.92f, 0.48f, 0.76f));
 
-        feedButton = CreateButton(canvasObject.transform, "Feed", new Vector2(-225f, 235f), () => gameManager.PerformCare(CareActionType.Feed));
-        playButton = CreateButton(canvasObject.transform, "Play", new Vector2(0f, 235f), () => gameManager.PerformCare(CareActionType.Play));
-        cleanButton = CreateButton(canvasObject.transform, "Clean", new Vector2(225f, 235f), () => gameManager.PerformCare(CareActionType.Clean));
-        sleepButton = CreateButton(canvasObject.transform, "Sleep", new Vector2(-225f, 150f), () => gameManager.PerformCare(CareActionType.Sleep));
-        studyButton = CreateButton(canvasObject.transform, "Study", new Vector2(0f, 150f), () => gameManager.PerformCare(CareActionType.Study));
-        trainButton = CreateButton(canvasObject.transform, "Train", new Vector2(225f, 150f), () => gameManager.PerformCare(CareActionType.Train));
-        CreateButton(canvasObject.transform, "Snack Tap", new Vector2(120f, 66f), StartMiniGame);
-        CreateButton(canvasObject.transform, "Dex", new Vector2(-120f, 66f), ShowDexGarden);
-        CreateButton(canvasObject.transform, "Free Snack", new Vector2(-225f, 0f), () => gameManager.WatchAdForFreeSnack());
-        CreateButton(canvasObject.transform, "Recover", new Vector2(225f, 0f), () => gameManager.WatchAdForRecovery());
-        CreateButton(canvasObject.transform, "Debug", new Vector2(0f, 0f), ShowDebug);
+        feedButton = CreateButton(canvasObject.transform, "Feed", new Vector2(-188f, 285f), () => gameManager.PerformCare(CareActionType.Feed));
+        playButton = CreateButton(canvasObject.transform, "Play", new Vector2(0f, 285f), () => gameManager.PerformCare(CareActionType.Play));
+        cleanButton = CreateButton(canvasObject.transform, "Clean", new Vector2(188f, 285f), () => gameManager.PerformCare(CareActionType.Clean));
+        sleepButton = CreateButton(canvasObject.transform, "Sleep", new Vector2(-188f, 220f), () => gameManager.PerformCare(CareActionType.Sleep));
+        studyButton = CreateButton(canvasObject.transform, "Study", new Vector2(0f, 220f), () => gameManager.PerformCare(CareActionType.Study));
+        trainButton = CreateButton(canvasObject.transform, "Train", new Vector2(188f, 220f), () => gameManager.PerformCare(CareActionType.Train));
+        CreateButton(canvasObject.transform, "Dex", new Vector2(-94f, 155f), ShowDexGarden);
+        CreateButton(canvasObject.transform, "Snack Tap", new Vector2(94f, 155f), StartMiniGame);
+        CreateButton(canvasObject.transform, "Free Snack", new Vector2(-188f, 90f), () => gameManager.WatchAdForFreeSnack());
+        CreateButton(canvasObject.transform, "Recover", new Vector2(0f, 90f), () => gameManager.WatchAdForRecovery());
+        CreateButton(canvasObject.transform, "Debug", new Vector2(188f, 90f), ShowDebug);
         dexGardenPanel = new DexGardenPanel(canvasObject.transform);
         debugPanel = new DebugPanel(canvasObject.transform);
         built = true;
