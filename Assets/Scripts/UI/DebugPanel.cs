@@ -63,7 +63,7 @@ public sealed class DebugPanel
     private static string FormatLevel(PuniStatus status)
     {
         return status.level >= Constants.EvolutionLevel
-            ? $"Lv.{status.level} 최고 레벨"
+            ? $"Lv.{status.level} 진화 완료"
             : $"Lv.{status.level} 경험치 {status.exp}/{status.NextExp}";
     }
 

@@ -106,6 +106,34 @@ public sealed class GameManager : MonoBehaviour
         uiManager.Refresh();
     }
 
+    public void StartNewEgg()
+    {
+        SaveData data = Puni.Data;
+        if (data.stage != PuniStage.Evolved)
+        {
+            LastMessage = "최종 진화 후 새 알을 받을 수 있어요.";
+            audioManager.PlayError();
+            uiManager.Refresh();
+            return;
+        }
+
+        string previousName = data.puniName;
+        int coin = data.status.coin;
+        data.status = new PuniStatus();
+        data.status.coin = coin;
+        data.growthStats = new PuniGrowthStats();
+        data.stage = PuniStage.Egg;
+        data.evolutionType = PuniEvolutionType.None;
+        data.puniName = "푸니";
+        data.lastSavedAt = DateTime.UtcNow.ToString("O");
+        data.EnsureDefaults();
+        gardenManager.UpdateGardenLevel(data, dexManager);
+        LastMessage = $"{previousName}의 기록을 도감에 남기고 새 알을 받았어요.";
+        audioManager.PlayReward();
+        Save();
+        uiManager.Refresh();
+    }
+
     public void AddMiniGameReward(int score, bool doubled)
     {
         Puni.Data.totalMiniGamePlays++;
@@ -113,9 +141,20 @@ public sealed class GameManager : MonoBehaviour
         Puni.Data.status.coin += coin;
         Puni.Data.status.happiness += 10;
         Puni.Data.status.AddExp(5);
+        EvolutionUpdateResult result = Puni.RefreshProgress();
         Puni.Data.status.Clamp();
-        LastMessage = $"스낵 탭 보상으로 코인 {coin}개를 받았어요.";
-        audioManager.PlayReward();
+        LastMessage = result.evolved
+            ? $"스낵 탭 보상으로 성장해서 {PuniText.EvolutionName(Puni.Data.evolutionType)}로 진화했어요."
+            : $"스낵 탭 보상으로 코인 {coin}개를 받았어요.";
+        if (result.evolved)
+        {
+            audioManager.PlayEvolution();
+        }
+        else
+        {
+            audioManager.PlayReward();
+        }
+
         Save();
         uiManager.Refresh();
     }
@@ -234,7 +273,15 @@ public sealed class GameManager : MonoBehaviour
         Puni.Data.lastSavedAt = DateTime.UtcNow.AddHours(-hours).ToString("O");
         LastOfflineProgress = offlineProgressSystem.Apply(Puni.Data);
         LastOfflineHours = LastOfflineProgress.hours;
-        LastMessage = $"디버그: 오프라인 {LastOfflineHours}시간 적용";
+        EvolutionUpdateResult result = Puni.RefreshProgress();
+        LastMessage = result.evolved
+            ? $"디버그: 오프라인 성장으로 {PuniText.EvolutionName(Puni.Data.evolutionType)} 진화"
+            : $"디버그: 오프라인 {LastOfflineHours}시간 적용";
+        if (result.evolved)
+        {
+            audioManager.PlayEvolution();
+        }
+
         Save();
         uiManager.Refresh();
     }

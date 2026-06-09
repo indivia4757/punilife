@@ -18,18 +18,19 @@ public sealed class GrowthGuidePanel
         rect.anchorMax = new Vector2(0.5f, 0.5f);
         rect.pivot = new Vector2(0.5f, 0.5f);
         rect.anchoredPosition = new Vector2(0f, 10f);
-        rect.sizeDelta = new Vector2(620f, 930f);
+        rect.sizeDelta = new Vector2(620f, 1030f);
 
-        var title = CreateText(root.transform, "Title", new Vector2(0f, 405f), new Vector2(540f, 52f), 32, TextAnchor.MiddleCenter);
+        var title = CreateText(root.transform, "Title", new Vector2(0f, 455f), new Vector2(540f, 52f), 32, TextAnchor.MiddleCenter);
         title.text = "성장 가이드";
 
-        var body = CreateText(root.transform, "Body", new Vector2(0f, 40f), new Vector2(540f, 675f), 21, TextAnchor.UpperLeft);
+        var body = CreateText(root.transform, "Body", new Vector2(0f, 50f), new Vector2(540f, 785f), 20, TextAnchor.UpperLeft);
         body.text =
             "푸니는 돌봄과 경험치로 성장합니다.\n\n" +
             "성장 단계\n" +
             "- 알: 먹이와 놀기만 가능\n" +
             "- Lv.4: 어린 푸니로 성장\n" +
-            "- Lv.10 또는 3일 플레이: 최종 진화\n\n" +
+            "- Lv.10 또는 3일 플레이: 최종 진화\n" +
+            "- 최종 진화 후 새 알을 받아 다음 푸니를 키울 수 있습니다.\n\n" +
             "돌봄 효과\n" +
             "- 먹이: 코인 10 사용, 배고픔 회복\n" +
             "- 놀기: 에너지 10 사용, 행복과 경험치 증가\n" +
@@ -43,6 +44,9 @@ public sealed class GrowthGuidePanel
             "- 대신 배고픔, 행복, 청결이 떨어지고 방치 수치가 오릅니다.\n\n" +
             "이름\n" +
             "- 이름 버튼으로 푸니의 이름을 바꿀 수 있습니다.\n\n" +
+            "반복 목표\n" +
+            "- 최종 진화한 푸니는 도감에 기록됩니다.\n" +
+            "- 새 알을 받아 다른 진화 타입을 모으면 정원이 복원됩니다.\n\n" +
             "진화 방향\n" +
             "- 행복과 애정이 높으면 햇살 푸니\n" +
             "- 공부를 많이 하면 학자 푸니\n" +
@@ -74,7 +78,7 @@ public sealed class GrowthGuidePanel
         rect.anchorMin = new Vector2(0.5f, 0.5f);
         rect.anchorMax = new Vector2(0.5f, 0.5f);
         rect.pivot = new Vector2(0.5f, 0.5f);
-        rect.anchoredPosition = new Vector2(0f, -400f);
+        rect.anchoredPosition = new Vector2(0f, -455f);
         rect.sizeDelta = new Vector2(190f, 58f);
 
         var text = CreateText(buttonObject.transform, "Text", Vector2.zero, new Vector2(190f, 58f), 22, TextAnchor.MiddleCenter);

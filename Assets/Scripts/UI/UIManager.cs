@@ -28,6 +28,7 @@ public sealed class UIManager : MonoBehaviour
     private Button sleepButton;
     private Button studyButton;
     private Button trainButton;
+    private Button newEggButton;
 
     public Transform CanvasTransform { get; private set; }
 
@@ -47,8 +48,10 @@ public sealed class UIManager : MonoBehaviour
         SaveData data = gameManager.Puni.Data;
         titleText.text = "푸니 라이프";
         coinText.text = $"코인 {data.status.coin}";
-        levelText.text = data.status.level >= Constants.EvolutionLevel
-            ? $"Lv.{data.status.level}  최고 레벨"
+        levelText.text = data.stage == PuniStage.Evolved
+            ? $"Lv.{data.status.level}  진화 완료"
+            : data.status.level >= Constants.EvolutionLevel
+            ? $"Lv.{data.status.level}  진화 준비"
             : $"Lv.{data.status.level}  경험치 {data.status.exp}/{data.status.NextExp}";
         nameText.text = data.puniName;
         messageText.text = BuildMessage(data);
@@ -139,7 +142,7 @@ public sealed class UIManager : MonoBehaviour
         CreateButton(canvasObject.transform, "회복", new Vector2(0f, 90f), () => gameManager.WatchAdForRecovery());
         CreateButton(canvasObject.transform, "가이드", new Vector2(188f, 90f), ShowGrowthGuide);
         CreateButton(canvasObject.transform, "이름", new Vector2(-94f, 28f), ShowNameEdit);
-        CreateButton(canvasObject.transform, "디버그", new Vector2(94f, 28f), ShowDebug);
+        newEggButton = CreateButton(canvasObject.transform, "새 알", new Vector2(94f, 28f), () => gameManager.StartNewEgg());
         dexGardenPanel = new DexGardenPanel(canvasObject.transform);
         growthGuidePanel = new GrowthGuidePanel(canvasObject.transform);
         nameEditPanel = new NameEditPanel(canvasObject.transform);
@@ -165,6 +168,7 @@ public sealed class UIManager : MonoBehaviour
         SetButtonState(sleepButton, data.stage != PuniStage.Egg);
         SetButtonState(studyButton, data.stage == PuniStage.Young && data.status.energy >= 10);
         SetButtonState(trainButton, data.stage == PuniStage.Young && data.status.energy >= 15);
+        SetButtonState(newEggButton, data.stage == PuniStage.Evolved);
     }
 
     private static void SetButtonState(Button button, bool interactable)
