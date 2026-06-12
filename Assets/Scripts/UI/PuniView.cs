@@ -3,8 +3,12 @@ using UnityEngine.UI;
 
 public sealed class PuniView
 {
+    private readonly RectTransform shadowRect;
     private readonly RectTransform rootRect;
+    private readonly Image shadow;
     private readonly Image body;
+    private readonly Image bodyHighlight;
+    private readonly Image lowerShade;
     private readonly Image shell;
     private readonly Image leftEye;
     private readonly Image rightEye;
@@ -19,6 +23,8 @@ public sealed class PuniView
     private readonly Text stageText;
     private readonly Sprite circleSprite;
     private readonly Vector2 basePosition = new Vector2(0f, 105f);
+    private Vector2 highlightBasePosition = new Vector2(-42f, 58f);
+    private readonly Vector2 lowerShadeBasePosition = new Vector2(18f, -58f);
     private Vector3 baseScale = Vector3.one;
     private CareActionType reactionAction;
     private float reactionTimer;
@@ -28,6 +34,18 @@ public sealed class PuniView
     public PuniView(Transform parent)
     {
         circleSprite = CreateCircleSprite();
+        var shadowObject = new GameObject("PuniShadow");
+        shadowObject.transform.SetParent(parent, false);
+        shadowRect = shadowObject.AddComponent<RectTransform>();
+        shadowRect.anchorMin = new Vector2(0.5f, 0.5f);
+        shadowRect.anchorMax = new Vector2(0.5f, 0.5f);
+        shadowRect.pivot = new Vector2(0.5f, 0.5f);
+        shadowRect.anchoredPosition = basePosition + new Vector2(0f, -126f);
+        shadowRect.sizeDelta = new Vector2(210f, 46f);
+        shadow = shadowObject.AddComponent<Image>();
+        shadow.sprite = circleSprite;
+        shadow.color = new Color(0.35f, 0.30f, 0.22f, 0.18f);
+
         var root = new GameObject("PuniView");
         root.transform.SetParent(parent, false);
         rootRect = root.AddComponent<RectTransform>();
@@ -39,6 +57,10 @@ public sealed class PuniView
 
         body = root.AddComponent<Image>();
         body.sprite = circleSprite;
+        body.material = null;
+
+        lowerShade = CreateShape(root.transform, "LowerShade", new Vector2(18f, -58f), new Vector2(170f, 95f), new Color(0.86f, 0.62f, 0.30f, 0.13f), -4f);
+        bodyHighlight = CreateShape(root.transform, "BodyHighlight", new Vector2(-42f, 58f), new Vector2(88f, 56f), new Color(1f, 1f, 1f, 0.33f), -22f);
 
         leftWing = CreateShape(root.transform, "LeftWing", new Vector2(-102f, -24f), new Vector2(52f, 82f), new Color(1f, 0.78f, 0.22f), 28f);
         rightWing = CreateShape(root.transform, "RightWing", new Vector2(102f, -24f), new Vector2(52f, 82f), new Color(1f, 0.78f, 0.22f), -28f);
@@ -70,6 +92,10 @@ public sealed class PuniView
         bool isEgg = data.stage == PuniStage.Egg;
         body.color = GetBodyColor(data);
         body.rectTransform.sizeDelta = isEgg ? new Vector2(150f, 205f) : new Vector2(214f, 225f);
+        bodyHighlight.rectTransform.sizeDelta = isEgg ? new Vector2(58f, 48f) : new Vector2(88f, 56f);
+        highlightBasePosition = isEgg ? new Vector2(-24f, 44f) : new Vector2(-42f, 58f);
+        bodyHighlight.rectTransform.anchoredPosition = highlightBasePosition;
+        lowerShade.gameObject.SetActive(!isEgg);
         shell.gameObject.SetActive(!isEgg);
         leftWing.gameObject.SetActive(!isEgg);
         rightWing.gameObject.SetActive(!isEgg && data.stage != PuniStage.Baby);
@@ -131,12 +157,18 @@ public sealed class PuniView
         rootRect.anchoredPosition = basePosition + new Vector2(idleX, idleY) + reactionOffset;
         rootRect.localScale = Vector3.Scale(baseScale, reactionScale);
         rootRect.localRotation = Quaternion.Euler(0f, 0f, rotation);
+        shadowRect.anchoredPosition = basePosition + new Vector2(idleX * 0.35f, -126f);
+        float shadowSquash = Mathf.Clamp01(1f - (idleY + reactionOffset.y) / 120f);
+        shadowRect.localScale = new Vector3(baseScale.x * (0.95f + shadowSquash * 0.12f), baseScale.y * (0.86f - shadowSquash * 0.08f), 1f);
+        shadow.color = new Color(0.35f, 0.30f, 0.22f, 0.14f + shadowSquash * 0.07f);
 
         float wingFlap = Mathf.Sin(time * 6.5f) * 8f;
         leftWing.rectTransform.localRotation = Quaternion.Euler(0f, 0f, 28f + wingFlap);
         rightWing.rectTransform.localRotation = Quaternion.Euler(0f, 0f, -28f - wingFlap);
         sproutLeft.rectTransform.localRotation = Quaternion.Euler(0f, 0f, -32f + Mathf.Sin(time * 3.2f) * 5f);
         sproutRight.rectTransform.localRotation = Quaternion.Euler(0f, 0f, 38f + Mathf.Sin(time * 3.1f + 0.8f) * 5f);
+        bodyHighlight.rectTransform.anchoredPosition = highlightBasePosition + new Vector2(Mathf.Sin(time * 1.4f) * 1.5f, Mathf.Sin(time * 1.8f) * 1.2f);
+        lowerShade.rectTransform.anchoredPosition = lowerShadeBasePosition + new Vector2(Mathf.Sin(time * 1.1f) * 1.2f, 0f);
 
         ApplyBlink(time);
     }
