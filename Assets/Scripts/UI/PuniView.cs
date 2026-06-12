@@ -10,6 +10,8 @@ public sealed class PuniView
     private readonly Image bodyHighlight;
     private readonly Image lowerShade;
     private readonly Image shell;
+    private readonly Image shellTop;
+    private readonly Image[] shellTeeth;
     private readonly Image leftEye;
     private readonly Image rightEye;
     private readonly Image leftEyeHighlight;
@@ -21,10 +23,16 @@ public sealed class PuniView
     private readonly Image sproutRight;
     private readonly Image leftWing;
     private readonly Image rightWing;
+    private readonly Image leftArm;
+    private readonly Image rightArm;
+    private readonly Image leftFoot;
+    private readonly Image rightFoot;
+    private readonly Image tail;
     private readonly Image[] spots;
     private readonly Text stageText;
     private readonly Text actionMarkText;
     private readonly Sprite circleSprite;
+    private readonly Sprite triangleSprite;
     private readonly Vector2 basePosition = new Vector2(0f, -34f);
     private Vector2 highlightBasePosition = new Vector2(-42f, 58f);
     private readonly Vector2 lowerShadeBasePosition = new Vector2(18f, -58f);
@@ -38,6 +46,7 @@ public sealed class PuniView
     public PuniView(Transform parent)
     {
         circleSprite = CreateCircleSprite();
+        triangleSprite = CreateTriangleSprite();
         var shadowObject = new GameObject("PuniShadow");
         shadowObject.transform.SetParent(parent, false);
         shadowRect = shadowObject.AddComponent<RectTransform>();
@@ -65,30 +74,44 @@ public sealed class PuniView
         body.material = null;
         body.raycastTarget = false;
 
-        lowerShade = CreateShape(root.transform, "LowerShade", new Vector2(18f, -58f), new Vector2(170f, 95f), new Color(0.86f, 0.62f, 0.30f, 0.13f), -4f);
-        bodyHighlight = CreateShape(root.transform, "BodyHighlight", new Vector2(-42f, 58f), new Vector2(88f, 56f), new Color(1f, 1f, 1f, 0.33f), -22f);
+        tail = CreateShape(root.transform, "Tail", new Vector2(112f, -72f), new Vector2(56f, 34f), new Color(1f, 0.74f, 0.21f), -24f);
+        leftWing = CreateShape(root.transform, "LeftWing", new Vector2(-116f, -20f), new Vector2(54f, 86f), new Color(1f, 0.76f, 0.20f), 28f);
+        rightWing = CreateShape(root.transform, "RightWing", new Vector2(116f, -20f), new Vector2(54f, 86f), new Color(1f, 0.76f, 0.20f), -28f);
+        leftFoot = CreateShape(root.transform, "LeftFoot", new Vector2(-54f, -126f), new Vector2(48f, 28f), new Color(0.94f, 0.63f, 0.25f), -8f);
+        rightFoot = CreateShape(root.transform, "RightFoot", new Vector2(54f, -126f), new Vector2(48f, 28f), new Color(0.94f, 0.63f, 0.25f), 8f);
+        lowerShade = CreateShape(root.transform, "LowerShade", new Vector2(18f, -50f), new Vector2(170f, 105f), new Color(0.86f, 0.62f, 0.30f, 0.12f), -4f);
+        bodyHighlight = CreateShape(root.transform, "BodyHighlight", new Vector2(-50f, 58f), new Vector2(98f, 62f), new Color(1f, 1f, 1f, 0.35f), -22f);
 
-        leftWing = CreateShape(root.transform, "LeftWing", new Vector2(-102f, -24f), new Vector2(52f, 82f), new Color(1f, 0.78f, 0.22f), 28f);
-        rightWing = CreateShape(root.transform, "RightWing", new Vector2(102f, -24f), new Vector2(52f, 82f), new Color(1f, 0.78f, 0.22f), -28f);
-        sproutLeft = CreateShape(root.transform, "SproutLeft", new Vector2(-28f, 128f), new Vector2(42f, 70f), new Color(1f, 0.83f, 0.28f), -32f);
-        sproutRight = CreateShape(root.transform, "SproutRight", new Vector2(22f, 128f), new Vector2(42f, 70f), new Color(1f, 0.83f, 0.28f), 38f);
+        sproutLeft = CreateShape(root.transform, "SproutLeft", new Vector2(-28f, 132f), new Vector2(42f, 74f), new Color(1f, 0.83f, 0.28f), -32f);
+        sproutRight = CreateShape(root.transform, "SproutRight", new Vector2(24f, 132f), new Vector2(44f, 76f), new Color(1f, 0.83f, 0.28f), 38f);
 
-        shell = CreateShape(root.transform, "EggShell", new Vector2(0f, -69f), new Vector2(220f, 96f), new Color(1f, 0.96f, 0.82f), 0f);
+        shell = CreateShape(root.transform, "EggShell", new Vector2(0f, -70f), new Vector2(224f, 104f), new Color(1f, 0.96f, 0.82f), 0f);
+        shellTop = CreateShape(root.transform, "ShellTopBand", new Vector2(0f, -38f), new Vector2(222f, 38f), new Color(1f, 0.97f, 0.86f), 0f);
+        shellTeeth = new[]
+        {
+            CreateTriangle(root.transform, "ShellTooth0", new Vector2(-72f, -34f), new Vector2(40f, 28f), new Color(1f, 0.97f, 0.86f), 0f),
+            CreateTriangle(root.transform, "ShellTooth1", new Vector2(-36f, -38f), new Vector2(42f, 30f), new Color(1f, 0.97f, 0.86f), 0f),
+            CreateTriangle(root.transform, "ShellTooth2", new Vector2(0f, -35f), new Vector2(44f, 32f), new Color(1f, 0.97f, 0.86f), 0f),
+            CreateTriangle(root.transform, "ShellTooth3", new Vector2(38f, -38f), new Vector2(42f, 30f), new Color(1f, 0.97f, 0.86f), 0f),
+            CreateTriangle(root.transform, "ShellTooth4", new Vector2(74f, -34f), new Vector2(40f, 28f), new Color(1f, 0.97f, 0.86f), 0f)
+        };
         spots = new[]
         {
-            CreateShape(shell.transform, "SpotOrange", new Vector2(22f, 6f), new Vector2(32f, 24f), new Color(1f, 0.53f, 0.27f), 0f),
-            CreateShape(shell.transform, "SpotMint", new Vector2(-56f, -8f), new Vector2(34f, 24f), new Color(0.50f, 0.78f, 0.74f), -15f),
-            CreateShape(shell.transform, "SpotYellow", new Vector2(72f, -12f), new Vector2(24f, 20f), new Color(0.98f, 0.78f, 0.25f), 0f),
-            CreateShape(shell.transform, "SpotGreen", new Vector2(-12f, -26f), new Vector2(28f, 20f), new Color(0.62f, 0.76f, 0.35f), 0f)
+            CreateShape(shell.transform, "SpotOrange", new Vector2(22f, 10f), new Vector2(34f, 26f), new Color(1f, 0.53f, 0.27f), 0f),
+            CreateShape(shell.transform, "SpotMint", new Vector2(-58f, -4f), new Vector2(36f, 26f), new Color(0.50f, 0.78f, 0.74f), -15f),
+            CreateShape(shell.transform, "SpotYellow", new Vector2(76f, -8f), new Vector2(25f, 22f), new Color(0.98f, 0.78f, 0.25f), 0f),
+            CreateShape(shell.transform, "SpotGreen", new Vector2(-14f, -27f), new Vector2(30f, 22f), new Color(0.62f, 0.76f, 0.35f), 0f)
         };
 
-        leftEye = CreateShape(root.transform, "LeftEye", new Vector2(-46f, 22f), new Vector2(34f, 48f), new Color(0.12f, 0.08f, 0.06f), 0f);
-        rightEye = CreateShape(root.transform, "RightEye", new Vector2(46f, 22f), new Vector2(34f, 48f), new Color(0.12f, 0.08f, 0.06f), 0f);
-        leftEyeHighlight = CreateShape(leftEye.transform, "LeftEyeHighlight", new Vector2(8f, 12f), new Vector2(11f, 14f), Color.white, 0f);
-        rightEyeHighlight = CreateShape(rightEye.transform, "RightEyeHighlight", new Vector2(8f, 12f), new Vector2(11f, 14f), Color.white, 0f);
-        mouth = CreateShape(root.transform, "Mouth", new Vector2(0f, -20f), new Vector2(34f, 26f), new Color(0.72f, 0.12f, 0.07f), 0f);
-        leftCheek = CreateShape(root.transform, "LeftCheek", new Vector2(-78f, -12f), new Vector2(32f, 22f), new Color(1f, 0.67f, 0.58f, 0.72f), 0f);
-        rightCheek = CreateShape(root.transform, "RightCheek", new Vector2(78f, -12f), new Vector2(32f, 22f), new Color(1f, 0.67f, 0.58f, 0.72f), 0f);
+        leftArm = CreateShape(root.transform, "LeftArm", new Vector2(-98f, -46f), new Vector2(42f, 54f), new Color(1f, 0.88f, 0.55f), -28f);
+        rightArm = CreateShape(root.transform, "RightArm", new Vector2(98f, -46f), new Vector2(42f, 54f), new Color(1f, 0.88f, 0.55f), 28f);
+        leftEye = CreateShape(root.transform, "LeftEye", new Vector2(-50f, 26f), new Vector2(38f, 52f), new Color(0.12f, 0.08f, 0.06f), 0f);
+        rightEye = CreateShape(root.transform, "RightEye", new Vector2(50f, 26f), new Vector2(38f, 52f), new Color(0.12f, 0.08f, 0.06f), 0f);
+        leftEyeHighlight = CreateShape(leftEye.transform, "LeftEyeHighlight", new Vector2(9f, 13f), new Vector2(12f, 15f), Color.white, 0f);
+        rightEyeHighlight = CreateShape(rightEye.transform, "RightEyeHighlight", new Vector2(9f, 13f), new Vector2(12f, 15f), Color.white, 0f);
+        mouth = CreateShape(root.transform, "Mouth", new Vector2(0f, -18f), new Vector2(38f, 30f), new Color(0.72f, 0.12f, 0.07f), 0f);
+        leftCheek = CreateShape(root.transform, "LeftCheek", new Vector2(-82f, -10f), new Vector2(36f, 24f), new Color(1f, 0.67f, 0.58f, 0.72f), 0f);
+        rightCheek = CreateShape(root.transform, "RightCheek", new Vector2(82f, -10f), new Vector2(36f, 24f), new Color(1f, 0.67f, 0.58f, 0.72f), 0f);
 
         stageText = CreateText(root.transform, "Stage", TextAnchor.MiddleCenter, 22, new Vector2(0f, -150f), new Vector2(320f, 42f));
         stageText.raycastTarget = false;
@@ -102,14 +125,25 @@ public sealed class PuniView
         currentStatus = data.status;
         bool isEgg = data.stage == PuniStage.Egg;
         body.color = GetBodyColor(data);
-        body.rectTransform.sizeDelta = isEgg ? new Vector2(150f, 205f) : new Vector2(214f, 225f);
+        body.rectTransform.sizeDelta = isEgg ? new Vector2(156f, 214f) : new Vector2(224f, 238f);
         bodyHighlight.rectTransform.sizeDelta = isEgg ? new Vector2(58f, 48f) : new Vector2(88f, 56f);
         highlightBasePosition = isEgg ? new Vector2(-24f, 44f) : new Vector2(-42f, 58f);
         bodyHighlight.rectTransform.anchoredPosition = highlightBasePosition;
         lowerShade.gameObject.SetActive(!isEgg);
         shell.gameObject.SetActive(!isEgg);
+        shellTop.gameObject.SetActive(!isEgg);
+        for (int i = 0; i < shellTeeth.Length; i++)
+        {
+            shellTeeth[i].gameObject.SetActive(!isEgg);
+        }
+
         leftWing.gameObject.SetActive(!isEgg);
         rightWing.gameObject.SetActive(!isEgg && data.stage != PuniStage.Baby);
+        leftArm.gameObject.SetActive(!isEgg);
+        rightArm.gameObject.SetActive(!isEgg);
+        leftFoot.gameObject.SetActive(!isEgg);
+        rightFoot.gameObject.SetActive(!isEgg);
+        tail.gameObject.SetActive(!isEgg);
         sproutLeft.gameObject.SetActive(!isEgg);
         sproutRight.gameObject.SetActive(!isEgg);
         leftEye.gameObject.SetActive(!isEgg);
@@ -129,13 +163,13 @@ public sealed class PuniView
         {
             shell.gameObject.SetActive(false);
             spots[0].transform.SetParent(rootRect, false);
-            spots[0].rectTransform.anchoredPosition = new Vector2(28f, 2f);
+            spots[0].rectTransform.anchoredPosition = new Vector2(32f, 2f);
             spots[1].transform.SetParent(rootRect, false);
-            spots[1].rectTransform.anchoredPosition = new Vector2(-38f, -16f);
+            spots[1].rectTransform.anchoredPosition = new Vector2(-42f, -16f);
             spots[2].transform.SetParent(rootRect, false);
-            spots[2].rectTransform.anchoredPosition = new Vector2(12f, -54f);
+            spots[2].rectTransform.anchoredPosition = new Vector2(12f, -58f);
             spots[3].transform.SetParent(rootRect, false);
-            spots[3].rectTransform.anchoredPosition = new Vector2(-12f, 48f);
+            spots[3].rectTransform.anchoredPosition = new Vector2(-14f, 52f);
         }
         else if (spots[0].transform.parent != shell.transform)
         {
@@ -180,6 +214,9 @@ public sealed class PuniView
         float wingFlap = Mathf.Sin(time * 6.5f) * 13f;
         leftWing.rectTransform.localRotation = Quaternion.Euler(0f, 0f, 28f + wingFlap);
         rightWing.rectTransform.localRotation = Quaternion.Euler(0f, 0f, -28f - wingFlap);
+        leftArm.rectTransform.localRotation = Quaternion.Euler(0f, 0f, -28f + Mathf.Sin(time * 4.2f) * 5f);
+        rightArm.rectTransform.localRotation = Quaternion.Euler(0f, 0f, 28f - Mathf.Sin(time * 4.2f + 0.7f) * 5f);
+        tail.rectTransform.localRotation = Quaternion.Euler(0f, 0f, -24f + Mathf.Sin(time * 4.6f) * 8f);
         sproutLeft.rectTransform.localRotation = Quaternion.Euler(0f, 0f, -32f + Mathf.Sin(time * 3.2f) * 8f);
         sproutRight.rectTransform.localRotation = Quaternion.Euler(0f, 0f, 38f + Mathf.Sin(time * 3.1f + 0.8f) * 8f);
         bodyHighlight.rectTransform.anchoredPosition = highlightBasePosition + new Vector2(Mathf.Sin(time * 1.4f) * 2.8f, Mathf.Sin(time * 1.8f) * 2.2f);
@@ -330,17 +367,17 @@ public sealed class PuniView
     {
         if (data.stage == PuniStage.Egg)
         {
-            return new Color(0.96f, 0.92f, 0.82f);
+            return new Color(1f, 0.94f, 0.78f);
         }
 
         return data.evolutionType switch
         {
-            PuniEvolutionType.Sunny => new Color(1f, 0.86f, 0.42f),
-            PuniEvolutionType.Scholar => new Color(0.58f, 0.72f, 1f),
-            PuniEvolutionType.Brave => new Color(1f, 0.54f, 0.48f),
-            PuniEvolutionType.Forest => new Color(0.5f, 0.84f, 0.56f),
-            PuniEvolutionType.Shadow => new Color(0.5f, 0.48f, 0.66f),
-            _ => new Color(1f, 0.90f, 0.58f)
+            PuniEvolutionType.Sunny => new Color(1f, 0.91f, 0.58f),
+            PuniEvolutionType.Scholar => new Color(0.88f, 0.98f, 1f),
+            PuniEvolutionType.Brave => new Color(1f, 0.86f, 0.70f),
+            PuniEvolutionType.Forest => new Color(0.90f, 0.98f, 0.78f),
+            PuniEvolutionType.Shadow => new Color(0.72f, 0.70f, 0.78f),
+            _ => new Color(1f, 0.91f, 0.62f)
         };
     }
 
@@ -385,10 +422,12 @@ public sealed class PuniView
 
     private void ResetFace()
     {
-        SetEyes(new Vector2(34f, 48f), new Vector2(-46f, 22f), new Vector2(46f, 22f), 0f, 0f);
-        SetMouth(new Vector2(34f, 26f), new Vector2(0f, -20f), new Color(0.72f, 0.12f, 0.07f));
-        leftCheek.rectTransform.sizeDelta = new Vector2(32f, 22f);
-        rightCheek.rectTransform.sizeDelta = new Vector2(32f, 22f);
+        SetEyes(new Vector2(38f, 52f), new Vector2(-50f, 26f), new Vector2(50f, 26f), 0f, 0f);
+        SetMouth(new Vector2(38f, 30f), new Vector2(0f, -18f), new Color(0.72f, 0.12f, 0.07f));
+        leftCheek.rectTransform.sizeDelta = new Vector2(36f, 24f);
+        rightCheek.rectTransform.sizeDelta = new Vector2(36f, 24f);
+        leftCheek.rectTransform.anchoredPosition = new Vector2(-82f, -10f);
+        rightCheek.rectTransform.anchoredPosition = new Vector2(82f, -10f);
         leftCheek.color = new Color(1f, 0.67f, 0.58f, 0.72f);
         rightCheek.color = leftCheek.color;
     }
@@ -464,6 +503,23 @@ public sealed class PuniView
         return image;
     }
 
+    private Image CreateTriangle(Transform parent, string name, Vector2 position, Vector2 size, Color color, float rotation)
+    {
+        var shape = new GameObject(name);
+        shape.transform.SetParent(parent, false);
+        var image = shape.AddComponent<Image>();
+        image.sprite = triangleSprite;
+        image.color = color;
+        image.raycastTarget = false;
+        image.rectTransform.anchorMin = new Vector2(0.5f, 0.5f);
+        image.rectTransform.anchorMax = new Vector2(0.5f, 0.5f);
+        image.rectTransform.pivot = new Vector2(0.5f, 0.5f);
+        image.rectTransform.anchoredPosition = position;
+        image.rectTransform.sizeDelta = size;
+        image.rectTransform.localRotation = Quaternion.Euler(0f, 0f, rotation);
+        return image;
+    }
+
     private static Text CreateText(Transform parent, string name, TextAnchor alignment, int fontSize, Vector2 position, Vector2 size)
     {
         var textObject = new GameObject(name);
@@ -497,6 +553,25 @@ public sealed class PuniView
             {
                 float distance = Vector2.Distance(new Vector2(x, y), center);
                 float alpha = Mathf.Clamp01(radius - distance + 1f);
+                texture.SetPixel(x, y, new Color(1f, 1f, 1f, alpha));
+            }
+        }
+
+        texture.Apply();
+        return Sprite.Create(texture, new Rect(0f, 0f, size, size), new Vector2(0.5f, 0.5f), size);
+    }
+
+    private static Sprite CreateTriangleSprite()
+    {
+        const int size = 96;
+        var texture = new Texture2D(size, size, TextureFormat.RGBA32, false);
+        for (int y = 0; y < size; y++)
+        {
+            for (int x = 0; x < size; x++)
+            {
+                float halfWidth = (y / (float)(size - 1)) * size * 0.5f;
+                float center = size * 0.5f;
+                float alpha = Mathf.Abs(x - center) <= halfWidth ? 1f : 0f;
                 texture.SetPixel(x, y, new Color(1f, 1f, 1f, alpha));
             }
         }
