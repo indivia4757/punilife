@@ -10,6 +10,7 @@ public sealed class UIManager : MonoBehaviour
     private Text levelText;
     private Text nameText;
     private Text messageText;
+    private Text speechText;
     private Text gardenText;
     private Text dexText;
     private StatusBarView hungerBar;
@@ -43,6 +44,14 @@ public sealed class UIManager : MonoBehaviour
         Refresh();
     }
 
+    private void Update()
+    {
+        if (built && puniView != null)
+        {
+            puniView.Tick(Time.time, Time.deltaTime);
+        }
+    }
+
     public void Refresh()
     {
         SaveData data = gameManager.Puni.Data;
@@ -55,6 +64,7 @@ public sealed class UIManager : MonoBehaviour
             : $"Lv.{data.status.level}  경험치 {data.status.exp}/{data.status.NextExp}";
         nameText.text = data.puniName;
         messageText.text = BuildMessage(data);
+        speechText.text = $"\"{gameManager.PuniSpeech}\"";
         gardenText.text = gameManager.GetGardenName();
         dexText.text = $"도감 {gameManager.GetDexUnlockedCount()}/5";
         hungerBar.SetValue(data.status.hunger);
@@ -121,6 +131,7 @@ public sealed class UIManager : MonoBehaviour
         dexText = CreateText(canvasObject.transform, "Dex", new Vector2(230f, -96f), new Vector2(220f, 34f), 20, TextAnchor.MiddleRight);
         messageText = CreateText(canvasObject.transform, "Message", new Vector2(0f, -145f), new Vector2(610f, 64f), 21, TextAnchor.MiddleCenter);
         nameText = CreateText(canvasObject.transform, "PuniName", new Vector2(0f, -218f), new Vector2(420f, 44f), 28, TextAnchor.MiddleCenter);
+        speechText = CreateSpeechBubble(canvasObject.transform);
 
         puniView = new PuniView(canvasObject.transform);
 
@@ -130,19 +141,19 @@ public sealed class UIManager : MonoBehaviour
         energyBar = new StatusBarView(canvasObject.transform, "에너지", new Vector2(0f, -830f), new Color(0.46f, 0.72f, 0.50f));
         affectionBar = new StatusBarView(canvasObject.transform, "애정", new Vector2(0f, -870f), new Color(0.92f, 0.48f, 0.76f));
 
-        feedButton = CreateButton(canvasObject.transform, "먹이", new Vector2(-188f, 285f), () => gameManager.PerformCare(CareActionType.Feed));
-        playButton = CreateButton(canvasObject.transform, "놀기", new Vector2(0f, 285f), () => gameManager.PerformCare(CareActionType.Play));
-        cleanButton = CreateButton(canvasObject.transform, "청소", new Vector2(188f, 285f), () => gameManager.PerformCare(CareActionType.Clean));
-        sleepButton = CreateButton(canvasObject.transform, "잠", new Vector2(-188f, 220f), () => gameManager.PerformCare(CareActionType.Sleep));
-        studyButton = CreateButton(canvasObject.transform, "공부", new Vector2(0f, 220f), () => gameManager.PerformCare(CareActionType.Study));
-        trainButton = CreateButton(canvasObject.transform, "훈련", new Vector2(188f, 220f), () => gameManager.PerformCare(CareActionType.Train));
+        feedButton = CreateButton(canvasObject.transform, "먹이", new Vector2(-188f, 285f), () => PerformCare(CareActionType.Feed));
+        playButton = CreateButton(canvasObject.transform, "놀기", new Vector2(0f, 285f), () => PerformCare(CareActionType.Play));
+        cleanButton = CreateButton(canvasObject.transform, "청소", new Vector2(188f, 285f), () => PerformCare(CareActionType.Clean));
+        sleepButton = CreateButton(canvasObject.transform, "잠", new Vector2(-188f, 220f), () => PerformCare(CareActionType.Sleep));
+        studyButton = CreateButton(canvasObject.transform, "공부", new Vector2(0f, 220f), () => PerformCare(CareActionType.Study));
+        trainButton = CreateButton(canvasObject.transform, "훈련", new Vector2(188f, 220f), () => PerformCare(CareActionType.Train));
         CreateButton(canvasObject.transform, "도감", new Vector2(-94f, 155f), ShowDexGarden);
         CreateButton(canvasObject.transform, "스낵 탭", new Vector2(94f, 155f), StartMiniGame);
         CreateButton(canvasObject.transform, "무료 간식", new Vector2(-188f, 90f), () => gameManager.WatchAdForFreeSnack());
         CreateButton(canvasObject.transform, "회복", new Vector2(0f, 90f), () => gameManager.WatchAdForRecovery());
         CreateButton(canvasObject.transform, "가이드", new Vector2(188f, 90f), ShowGrowthGuide);
         CreateButton(canvasObject.transform, "이름", new Vector2(-94f, 28f), ShowNameEdit);
-        newEggButton = CreateButton(canvasObject.transform, "새 알", new Vector2(94f, 28f), () => gameManager.StartNewEgg());
+        newEggButton = CreateButton(canvasObject.transform, "새 알", new Vector2(94f, 28f), StartNewEgg);
         dexGardenPanel = new DexGardenPanel(canvasObject.transform);
         growthGuidePanel = new GrowthGuidePanel(canvasObject.transform);
         nameEditPanel = new NameEditPanel(canvasObject.transform);
@@ -187,6 +198,18 @@ public sealed class UIManager : MonoBehaviour
         }
 
         miniGame.StartGame(gameManager, this);
+    }
+
+    private void PerformCare(CareActionType action)
+    {
+        puniView.PlayReaction(action);
+        gameManager.PerformCare(action);
+    }
+
+    private void StartNewEgg()
+    {
+        puniView.PlayCelebrate();
+        gameManager.StartNewEgg();
     }
 
     private void ShowDexGarden()
@@ -234,6 +257,31 @@ public sealed class UIManager : MonoBehaviour
         text.rectTransform.pivot = new Vector2(0.5f, 1f);
         text.rectTransform.anchoredPosition = anchoredPosition;
         text.rectTransform.sizeDelta = size;
+        return text;
+    }
+
+    private static Text CreateSpeechBubble(Transform parent)
+    {
+        var bubble = CreatePanel(parent, "PuniSpeechBubble", new Color(1f, 1f, 1f, 0.86f));
+        bubble.rectTransform.anchorMin = new Vector2(0.5f, 1f);
+        bubble.rectTransform.anchorMax = new Vector2(0.5f, 1f);
+        bubble.rectTransform.pivot = new Vector2(0.5f, 1f);
+        bubble.rectTransform.anchoredPosition = new Vector2(0f, -270f);
+        bubble.rectTransform.sizeDelta = new Vector2(540f, 76f);
+
+        var textObject = new GameObject("Text");
+        textObject.transform.SetParent(bubble.transform, false);
+        var text = textObject.AddComponent<Text>();
+        text.font = PuniFonts.Default;
+        text.fontSize = 23;
+        text.alignment = TextAnchor.MiddleCenter;
+        text.horizontalOverflow = HorizontalWrapMode.Wrap;
+        text.verticalOverflow = VerticalWrapMode.Truncate;
+        text.color = new Color(0.18f, 0.21f, 0.23f);
+        text.rectTransform.anchorMin = Vector2.zero;
+        text.rectTransform.anchorMax = Vector2.one;
+        text.rectTransform.offsetMin = new Vector2(18f, 8f);
+        text.rectTransform.offsetMax = new Vector2(-18f, -8f);
         return text;
     }
 

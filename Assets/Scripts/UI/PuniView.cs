@@ -18,6 +18,12 @@ public sealed class PuniView
     private readonly Image[] spots;
     private readonly Text stageText;
     private readonly Sprite circleSprite;
+    private readonly Vector2 basePosition = new Vector2(0f, 105f);
+    private Vector3 baseScale = Vector3.one;
+    private CareActionType reactionAction;
+    private float reactionTimer;
+    private bool hasReaction;
+    private const float ReactionDuration = 0.85f;
 
     public PuniView(Transform parent)
     {
@@ -28,7 +34,7 @@ public sealed class PuniView
         rootRect.anchorMin = new Vector2(0.5f, 0.5f);
         rootRect.anchorMax = new Vector2(0.5f, 0.5f);
         rootRect.pivot = new Vector2(0.5f, 0.5f);
-        rootRect.anchoredPosition = new Vector2(0f, 105f);
+        rootRect.anchoredPosition = basePosition;
         rootRect.sizeDelta = new Vector2(250f, 270f);
 
         body = root.AddComponent<Image>();
@@ -98,8 +104,92 @@ public sealed class PuniView
         }
 
         ApplyMood(data.status);
-        rootRect.localScale = GetScale(data.stage);
+        baseScale = GetScale(data.stage);
         stageText.text = data.stage == PuniStage.Evolved ? PuniText.EvolutionName(data.evolutionType) : PuniText.StageName(data.stage);
+    }
+
+    public void Tick(float time, float deltaTime)
+    {
+        float idleY = Mathf.Sin(time * 2.1f) * 5f;
+        float idleX = Mathf.Sin(time * 1.25f) * 2f;
+        float reactionProgress = 0f;
+        Vector2 reactionOffset = Vector2.zero;
+        Vector3 reactionScale = Vector3.one;
+        float rotation = Mathf.Sin(time * 1.8f) * 1.5f;
+
+        if (hasReaction)
+        {
+            reactionTimer = Mathf.Max(0f, reactionTimer - deltaTime);
+            reactionProgress = 1f - reactionTimer / ReactionDuration;
+            ApplyReaction(reactionProgress, ref reactionOffset, ref reactionScale, ref rotation);
+            if (reactionTimer <= 0f)
+            {
+                hasReaction = false;
+            }
+        }
+
+        rootRect.anchoredPosition = basePosition + new Vector2(idleX, idleY) + reactionOffset;
+        rootRect.localScale = Vector3.Scale(baseScale, reactionScale);
+        rootRect.localRotation = Quaternion.Euler(0f, 0f, rotation);
+
+        float wingFlap = Mathf.Sin(time * 6.5f) * 8f;
+        leftWing.rectTransform.localRotation = Quaternion.Euler(0f, 0f, 28f + wingFlap);
+        rightWing.rectTransform.localRotation = Quaternion.Euler(0f, 0f, -28f - wingFlap);
+        sproutLeft.rectTransform.localRotation = Quaternion.Euler(0f, 0f, -32f + Mathf.Sin(time * 3.2f) * 5f);
+        sproutRight.rectTransform.localRotation = Quaternion.Euler(0f, 0f, 38f + Mathf.Sin(time * 3.1f + 0.8f) * 5f);
+
+        ApplyBlink(time);
+    }
+
+    public void PlayReaction(CareActionType action)
+    {
+        reactionAction = action;
+        reactionTimer = ReactionDuration;
+        hasReaction = true;
+    }
+
+    public void PlayCelebrate()
+    {
+        reactionAction = CareActionType.Play;
+        reactionTimer = ReactionDuration;
+        hasReaction = true;
+    }
+
+    private void ApplyReaction(float progress, ref Vector2 offset, ref Vector3 scale, ref float rotation)
+    {
+        float pulse = Mathf.Sin(progress * Mathf.PI);
+        float fastPulse = Mathf.Sin(progress * Mathf.PI * 4f);
+
+        switch (reactionAction)
+        {
+            case CareActionType.Feed:
+                offset.y += pulse * 10f;
+                scale = new Vector3(1f + pulse * 0.10f, 1f - pulse * 0.06f, 1f);
+                break;
+            case CareActionType.Play:
+                offset.y += Mathf.Abs(fastPulse) * 26f;
+                rotation += fastPulse * 8f;
+                scale = Vector3.one * (1f + pulse * 0.06f);
+                break;
+            case CareActionType.Clean:
+                offset.x += Mathf.Sin(progress * Mathf.PI * 8f) * 9f * pulse;
+                rotation += Mathf.Sin(progress * Mathf.PI * 8f) * 4f * pulse;
+                scale = Vector3.one * (1f + pulse * 0.04f);
+                break;
+            case CareActionType.Sleep:
+                offset.y -= pulse * 8f;
+                rotation -= pulse * 5f;
+                scale = new Vector3(1f + pulse * 0.04f, 1f - pulse * 0.03f, 1f);
+                break;
+            case CareActionType.Study:
+                rotation += Mathf.Sin(progress * Mathf.PI * 5f) * 6f * pulse;
+                break;
+            case CareActionType.Train:
+                offset.y += pulse * 14f;
+                scale = new Vector3(1f + pulse * 0.13f, 1f + pulse * 0.05f, 1f);
+                rotation += Mathf.Sin(progress * Mathf.PI * 6f) * 5f * pulse;
+                break;
+        }
     }
 
     private static Vector3 GetScale(PuniStage stage)
@@ -163,6 +253,20 @@ public sealed class PuniView
 
         leftEye.color = new Color(0.12f, 0.08f, 0.06f);
         rightEye.color = leftEye.color;
+    }
+
+    private void ApplyBlink(float time)
+    {
+        if (!leftEye.gameObject.activeSelf || !rightEye.gameObject.activeSelf)
+        {
+            return;
+        }
+
+        float blinkCycle = Mathf.Repeat(time, 4.2f);
+        bool blinking = blinkCycle > 3.95f;
+        Vector2 eyeSize = blinking ? new Vector2(34f, 8f) : new Vector2(34f, 48f);
+        leftEye.rectTransform.sizeDelta = eyeSize;
+        rightEye.rectTransform.sizeDelta = eyeSize;
     }
 
     private void ResetSpotParent()
