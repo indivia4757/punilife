@@ -10,6 +10,11 @@ public sealed class StatusBarView
     private readonly string name;
 
     public StatusBarView(Transform parent, string name, Vector2 position, Color normalColor)
+        : this(parent, name, position, normalColor, new Vector2(560f, 38f), 20, 130f, 145f)
+    {
+    }
+
+    public StatusBarView(Transform parent, string name, Vector2 position, Color normalColor, Vector2 size, int fontSize, float labelWidth, float sliderLeft)
     {
         this.name = name;
         this.normalColor = normalColor;
@@ -21,9 +26,9 @@ public sealed class StatusBarView
         rect.anchorMax = new Vector2(0.5f, 1f);
         rect.pivot = new Vector2(0.5f, 1f);
         rect.anchoredPosition = position;
-        rect.sizeDelta = new Vector2(560f, 38f);
+        rect.sizeDelta = size;
 
-        label = CreateText(root.transform, "Label", TextAnchor.MiddleLeft, new Vector2(130f, 38f));
+        label = CreateText(root.transform, "Label", TextAnchor.MiddleLeft, new Vector2(labelWidth, size.y), fontSize);
         label.rectTransform.anchorMin = new Vector2(0f, 0f);
         label.rectTransform.anchorMax = new Vector2(0f, 1f);
 
@@ -36,8 +41,8 @@ public sealed class StatusBarView
         var sliderRect = sliderObject.GetComponent<RectTransform>();
         sliderRect.anchorMin = new Vector2(0f, 0f);
         sliderRect.anchorMax = new Vector2(1f, 1f);
-        sliderRect.offsetMin = new Vector2(145f, 7f);
-        sliderRect.offsetMax = new Vector2(0f, -6f);
+        sliderRect.offsetMin = new Vector2(sliderLeft, 7f);
+        sliderRect.offsetMax = new Vector2(0f, -7f);
 
         var background = CreateImage(sliderObject.transform, "Background", new Color(0.82f, 0.86f, 0.88f));
         background.rectTransform.anchorMin = Vector2.zero;
@@ -80,14 +85,14 @@ public sealed class StatusBarView
         return image;
     }
 
-    private static Text CreateText(Transform parent, string name, TextAnchor alignment, Vector2 size)
+    private static Text CreateText(Transform parent, string name, TextAnchor alignment, Vector2 size, int fontSize)
     {
         var textObject = new GameObject(name);
         textObject.transform.SetParent(parent, false);
         var text = textObject.AddComponent<Text>();
         text.font = PuniFonts.Default;
         text.alignment = alignment;
-        text.fontSize = 20;
+        text.fontSize = fontSize;
         text.horizontalOverflow = HorizontalWrapMode.Overflow;
         text.verticalOverflow = VerticalWrapMode.Truncate;
         text.color = new Color(0.18f, 0.21f, 0.23f);

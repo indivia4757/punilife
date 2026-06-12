@@ -130,16 +130,17 @@ public sealed class UIManager : MonoBehaviour
         gardenText = CreateText(canvasObject.transform, "Garden", new Vector2(-180f, -96f), new Vector2(300f, 34f), 20, TextAnchor.MiddleLeft);
         dexText = CreateText(canvasObject.transform, "Dex", new Vector2(230f, -96f), new Vector2(220f, 34f), 20, TextAnchor.MiddleRight);
         messageText = CreateText(canvasObject.transform, "Message", new Vector2(0f, -145f), new Vector2(610f, 64f), 21, TextAnchor.MiddleCenter);
-        nameText = CreateText(canvasObject.transform, "PuniName", new Vector2(0f, -218f), new Vector2(420f, 44f), 28, TextAnchor.MiddleCenter);
+        nameText = CreateText(canvasObject.transform, "PuniName", new Vector2(0f, -260f), new Vector2(420f, 44f), 28, TextAnchor.MiddleCenter);
         speechText = CreateSpeechBubble(canvasObject.transform);
 
         puniView = new PuniView(canvasObject.transform);
 
-        hungerBar = new StatusBarView(canvasObject.transform, "배고픔", new Vector2(0f, -710f), new Color(0.96f, 0.55f, 0.45f));
-        happinessBar = new StatusBarView(canvasObject.transform, "행복", new Vector2(0f, -750f), new Color(1f, 0.78f, 0.30f));
-        cleanlinessBar = new StatusBarView(canvasObject.transform, "청결", new Vector2(0f, -790f), new Color(0.34f, 0.72f, 0.92f));
-        energyBar = new StatusBarView(canvasObject.transform, "에너지", new Vector2(0f, -830f), new Color(0.46f, 0.72f, 0.50f));
-        affectionBar = new StatusBarView(canvasObject.transform, "애정", new Vector2(0f, -870f), new Color(0.92f, 0.48f, 0.76f));
+        Vector2 statusSize = new Vector2(245f, 30f);
+        hungerBar = new StatusBarView(canvasObject.transform, "배고픔", new Vector2(-250f, -146f), new Color(0.96f, 0.55f, 0.45f), statusSize, 16, 68f, 78f);
+        happinessBar = new StatusBarView(canvasObject.transform, "행복", new Vector2(0f, -146f), new Color(1f, 0.78f, 0.30f), statusSize, 16, 58f, 68f);
+        cleanlinessBar = new StatusBarView(canvasObject.transform, "청결", new Vector2(250f, -146f), new Color(0.34f, 0.72f, 0.92f), statusSize, 16, 58f, 68f);
+        energyBar = new StatusBarView(canvasObject.transform, "에너지", new Vector2(-125f, -180f), new Color(0.46f, 0.72f, 0.50f), statusSize, 16, 68f, 78f);
+        affectionBar = new StatusBarView(canvasObject.transform, "애정", new Vector2(125f, -180f), new Color(0.92f, 0.48f, 0.76f), statusSize, 16, 58f, 68f);
 
         CreateActionDock(canvasObject.transform);
 
@@ -175,7 +176,7 @@ public sealed class UIManager : MonoBehaviour
         band.rectTransform.anchorMax = new Vector2(1f, 1f);
         band.rectTransform.pivot = new Vector2(0.5f, 1f);
         band.rectTransform.anchoredPosition = Vector2.zero;
-        band.rectTransform.sizeDelta = new Vector2(0f, 185f);
+        band.rectTransform.sizeDelta = new Vector2(0f, 225f);
     }
 
     private static void CreateActionDock(Transform parent)
@@ -283,7 +284,7 @@ public sealed class UIManager : MonoBehaviour
         bubble.rectTransform.anchorMin = new Vector2(0.5f, 1f);
         bubble.rectTransform.anchorMax = new Vector2(0.5f, 1f);
         bubble.rectTransform.pivot = new Vector2(0.5f, 1f);
-        bubble.rectTransform.anchoredPosition = new Vector2(0f, -270f);
+        bubble.rectTransform.anchoredPosition = new Vector2(0f, -312f);
         bubble.rectTransform.sizeDelta = new Vector2(540f, 76f);
 
         var textObject = new GameObject("Text");
