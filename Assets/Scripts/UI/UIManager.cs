@@ -141,19 +141,26 @@ public sealed class UIManager : MonoBehaviour
         energyBar = new StatusBarView(canvasObject.transform, "에너지", new Vector2(0f, -830f), new Color(0.46f, 0.72f, 0.50f));
         affectionBar = new StatusBarView(canvasObject.transform, "애정", new Vector2(0f, -870f), new Color(0.92f, 0.48f, 0.76f));
 
-        feedButton = CreateButton(canvasObject.transform, "먹이", new Vector2(-188f, 285f), () => PerformCare(CareActionType.Feed));
-        playButton = CreateButton(canvasObject.transform, "놀기", new Vector2(0f, 285f), () => PerformCare(CareActionType.Play));
-        cleanButton = CreateButton(canvasObject.transform, "청소", new Vector2(188f, 285f), () => PerformCare(CareActionType.Clean));
-        sleepButton = CreateButton(canvasObject.transform, "잠", new Vector2(-188f, 220f), () => PerformCare(CareActionType.Sleep));
-        studyButton = CreateButton(canvasObject.transform, "공부", new Vector2(0f, 220f), () => PerformCare(CareActionType.Study));
-        trainButton = CreateButton(canvasObject.transform, "훈련", new Vector2(188f, 220f), () => PerformCare(CareActionType.Train));
-        CreateButton(canvasObject.transform, "도감", new Vector2(-94f, 155f), ShowDexGarden);
-        CreateButton(canvasObject.transform, "스낵 탭", new Vector2(94f, 155f), StartMiniGame);
-        CreateButton(canvasObject.transform, "무료 간식", new Vector2(-188f, 90f), () => gameManager.WatchAdForFreeSnack());
-        CreateButton(canvasObject.transform, "회복", new Vector2(0f, 90f), () => gameManager.WatchAdForRecovery());
-        CreateButton(canvasObject.transform, "가이드", new Vector2(188f, 90f), ShowGrowthGuide);
-        CreateButton(canvasObject.transform, "이름", new Vector2(-94f, 28f), ShowNameEdit);
-        newEggButton = CreateButton(canvasObject.transform, "새 알", new Vector2(94f, 28f), StartNewEgg);
+        CreateActionDock(canvasObject.transform);
+
+        Vector2 careButtonSize = new Vector2(164f, 54f);
+        feedButton = CreateButton(canvasObject.transform, "먹이", new Vector2(-178f, 258f), () => PerformCare(CareActionType.Feed), careButtonSize);
+        playButton = CreateButton(canvasObject.transform, "놀기", new Vector2(0f, 258f), () => PerformCare(CareActionType.Play), careButtonSize);
+        cleanButton = CreateButton(canvasObject.transform, "청소", new Vector2(178f, 258f), () => PerformCare(CareActionType.Clean), careButtonSize);
+        sleepButton = CreateButton(canvasObject.transform, "잠", new Vector2(-178f, 196f), () => PerformCare(CareActionType.Sleep), careButtonSize);
+        studyButton = CreateButton(canvasObject.transform, "공부", new Vector2(0f, 196f), () => PerformCare(CareActionType.Study), careButtonSize);
+        trainButton = CreateButton(canvasObject.transform, "훈련", new Vector2(178f, 196f), () => PerformCare(CareActionType.Train), careButtonSize);
+
+        Vector2 menuButtonSize = new Vector2(164f, 52f);
+        CreateButton(canvasObject.transform, "도감", new Vector2(-178f, 124f), ShowDexGarden, menuButtonSize);
+        CreateButton(canvasObject.transform, "스낵 탭", new Vector2(0f, 124f), StartMiniGame, menuButtonSize);
+        CreateButton(canvasObject.transform, "가이드", new Vector2(178f, 124f), ShowGrowthGuide, menuButtonSize);
+
+        Vector2 utilityButtonSize = new Vector2(148f, 50f);
+        CreateButton(canvasObject.transform, "무료 간식", new Vector2(-238f, 52f), () => gameManager.WatchAdForFreeSnack(), utilityButtonSize, 19);
+        CreateButton(canvasObject.transform, "회복", new Vector2(-79f, 52f), () => gameManager.WatchAdForRecovery(), utilityButtonSize, 19);
+        CreateButton(canvasObject.transform, "이름", new Vector2(80f, 52f), ShowNameEdit, utilityButtonSize, 19);
+        newEggButton = CreateButton(canvasObject.transform, "새 알", new Vector2(239f, 52f), StartNewEgg, utilityButtonSize, 19);
         dexGardenPanel = new DexGardenPanel(canvasObject.transform);
         growthGuidePanel = new GrowthGuidePanel(canvasObject.transform);
         nameEditPanel = new NameEditPanel(canvasObject.transform);
@@ -169,6 +176,16 @@ public sealed class UIManager : MonoBehaviour
         band.rectTransform.pivot = new Vector2(0.5f, 1f);
         band.rectTransform.anchoredPosition = Vector2.zero;
         band.rectTransform.sizeDelta = new Vector2(0f, 185f);
+    }
+
+    private static void CreateActionDock(Transform parent)
+    {
+        var dock = CreatePanel(parent, "ActionDock", new Color(1f, 1f, 1f, 0.34f));
+        dock.rectTransform.anchorMin = new Vector2(0f, 0f);
+        dock.rectTransform.anchorMax = new Vector2(1f, 0f);
+        dock.rectTransform.pivot = new Vector2(0.5f, 0f);
+        dock.rectTransform.anchoredPosition = Vector2.zero;
+        dock.rectTransform.sizeDelta = new Vector2(0f, 310f);
     }
 
     private void RefreshButtons(SaveData data)
@@ -285,7 +302,13 @@ public sealed class UIManager : MonoBehaviour
         return text;
     }
 
-    private static Button CreateButton(Transform parent, string label, Vector2 anchoredPosition, UnityEngine.Events.UnityAction onClick)
+    private static Button CreateButton(
+        Transform parent,
+        string label,
+        Vector2 anchoredPosition,
+        UnityEngine.Events.UnityAction onClick,
+        Vector2? size = null,
+        int fontSize = 20)
     {
         var buttonObject = new GameObject($"{label}Button");
         buttonObject.transform.SetParent(parent, false);
@@ -301,14 +324,15 @@ public sealed class UIManager : MonoBehaviour
         rect.anchorMax = new Vector2(0.5f, 0f);
         rect.pivot = new Vector2(0.5f, 0.5f);
         rect.anchoredPosition = anchoredPosition;
-        rect.sizeDelta = new Vector2(176f, 62f);
+        Vector2 buttonSize = size ?? new Vector2(164f, 54f);
+        rect.sizeDelta = buttonSize;
 
         var labelObject = new GameObject("Text");
         labelObject.transform.SetParent(buttonObject.transform, false);
         var text = labelObject.AddComponent<Text>();
         text.font = PuniFonts.Default;
         text.text = label;
-        text.fontSize = 22;
+        text.fontSize = fontSize;
         text.alignment = TextAnchor.MiddleCenter;
         text.color = Color.white;
         text.rectTransform.anchorMin = Vector2.zero;
