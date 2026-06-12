@@ -111,6 +111,13 @@ public sealed class GameManager : MonoBehaviour
         uiManager.Refresh();
     }
 
+    public void TalkToPuni()
+    {
+        PuniSpeech = BuildConversationSpeech(Puni.Data);
+        audioManager.PlayButtonClick();
+        uiManager.Refresh();
+    }
+
     public void StartNewEgg()
     {
         SaveData data = Puni.Data;
@@ -250,6 +257,11 @@ public sealed class GameManager : MonoBehaviour
 
     public void Save()
     {
+        if (saveManager == null || Puni == null || Puni.Data == null)
+        {
+            return;
+        }
+
         saveManager.Save(Puni.Data);
     }
 
@@ -444,5 +456,47 @@ public sealed class GameManager : MonoBehaviour
             CareActionType.Train => "훈련은 아직 어려워.",
             _ => "지금은 안 될 것 같아."
         };
+    }
+
+    private static string BuildConversationSpeech(SaveData data)
+    {
+        if (data.status.isSick)
+        {
+            return Pick("조금 쉬고 싶어...", "옆에 있어주면 나아질 것 같아.", "회복하면 다시 놀자.");
+        }
+
+        if (data.status.isHungry)
+        {
+            return Pick("간식 냄새가 나는 것 같아.", "꼬르륵... 들렸어?", "먹으면 힘이 날 것 같아.");
+        }
+
+        if (data.status.isDirty)
+        {
+            return Pick("깨끗해지면 기분이 좋아질 것 같아.", "몸이 조금 찝찝해.", "씻고 나면 반짝일 수 있어.");
+        }
+
+        if (data.status.isSulking)
+        {
+            return Pick("나랑 이야기해줘서 좋아.", "혼자 있으면 심심해.", "조금만 더 같이 있어줘.");
+        }
+
+        return data.stage switch
+        {
+            PuniStage.Egg => Pick("톡톡... 여기 있어.", "밖은 어떤 곳이야?", "따뜻해서 좋아."),
+            PuniStage.Baby => Pick("오늘도 같이 있어줄 거지?", "나 많이 컸어?", "작은 것도 전부 신기해."),
+            PuniStage.Young => Pick("어떤 모습으로 자랄지 궁금해.", "공부도 훈련도 해보고 싶어.", "네가 고르는 길을 따라가볼래."),
+            PuniStage.Evolved => Pick("이 모습 마음에 들어?", "내 기록을 도감에 남겨줘.", "다음 푸니도 만나보고 싶어."),
+            _ => Pick("안녕!", "헤헤.", "오늘은 좋은 날이야.")
+        };
+    }
+
+    private static string Pick(params string[] lines)
+    {
+        if (lines == null || lines.Length == 0)
+        {
+            return "...";
+        }
+
+        return lines[UnityEngine.Random.Range(0, lines.Length)];
     }
 }

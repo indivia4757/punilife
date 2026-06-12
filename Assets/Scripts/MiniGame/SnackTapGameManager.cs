@@ -140,7 +140,7 @@ public sealed class SnackTapGameManager : MonoBehaviour
         resultPanel = new GameObject("ResultPanel");
         resultPanel.transform.SetParent(snackRoot, false);
         var image = resultPanel.AddComponent<Image>();
-        image.color = new Color(1f, 1f, 1f, 0.96f);
+        PuniTheme.ApplyRounded(image, PuniTheme.SoftPanel);
 
         var rect = resultPanel.GetComponent<RectTransform>();
         rect.anchorMin = new Vector2(0.5f, 0.5f);
@@ -178,10 +178,12 @@ public sealed class SnackTapGameManager : MonoBehaviour
 
     private void FinishReward(bool doubled)
     {
+        running = false;
         gameManager.AddMiniGameReward(score, doubled);
         if (snackRoot != null)
         {
             Destroy(snackRoot.gameObject);
+            snackRoot = null;
         }
 
         uiManager.Refresh();
@@ -189,10 +191,18 @@ public sealed class SnackTapGameManager : MonoBehaviour
 
     private void ClearSnacks()
     {
+        if (snackRoot == null)
+        {
+            return;
+        }
+
         SnackItem[] snacks = snackRoot.GetComponentsInChildren<SnackItem>();
         foreach (SnackItem snack in snacks)
         {
-            Destroy(snack.gameObject);
+            if (snack != null)
+            {
+                Destroy(snack.gameObject);
+            }
         }
     }
 
@@ -207,6 +217,7 @@ public sealed class SnackTapGameManager : MonoBehaviour
         text.color = new Color(0.18f, 0.21f, 0.23f);
         text.horizontalOverflow = HorizontalWrapMode.Wrap;
         text.verticalOverflow = VerticalWrapMode.Truncate;
+        text.raycastTarget = false;
         text.rectTransform.anchorMin = new Vector2(0.5f, 0.5f);
         text.rectTransform.anchorMax = new Vector2(0.5f, 0.5f);
         text.rectTransform.pivot = new Vector2(0.5f, 0.5f);
@@ -219,8 +230,9 @@ public sealed class SnackTapGameManager : MonoBehaviour
     {
         var buttonObject = new GameObject($"{label}Button");
         buttonObject.transform.SetParent(parent, false);
+        PuniTheme.CreateShadow(buttonObject.transform, "Shadow", new Vector2(0f, -5f));
         var image = buttonObject.AddComponent<Image>();
-        image.color = new Color(0.43f, 0.66f, 0.90f);
+        PuniTheme.ApplyRounded(image, label.Contains("광고") ? PuniTheme.SkyButton : PuniTheme.CreamButton);
 
         var button = buttonObject.AddComponent<Button>();
         button.onClick.AddListener(onClick);
@@ -234,7 +246,7 @@ public sealed class SnackTapGameManager : MonoBehaviour
 
         var text = CreateText(buttonObject.transform, "Text", Vector2.zero, new Vector2(170f, 58f), 22, TextAnchor.MiddleCenter);
         text.text = label;
-        text.color = Color.white;
+        text.color = PuniTheme.Ink;
         text.rectTransform.anchorMin = Vector2.zero;
         text.rectTransform.anchorMax = Vector2.one;
         text.rectTransform.offsetMin = Vector2.zero;

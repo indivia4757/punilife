@@ -22,7 +22,7 @@ public sealed class PuniView
     private readonly Image[] spots;
     private readonly Text stageText;
     private readonly Sprite circleSprite;
-    private readonly Vector2 basePosition = new Vector2(0f, 105f);
+    private readonly Vector2 basePosition = new Vector2(0f, -65f);
     private Vector2 highlightBasePosition = new Vector2(-42f, 58f);
     private readonly Vector2 lowerShadeBasePosition = new Vector2(18f, -58f);
     private Vector3 baseScale = Vector3.one;
@@ -45,6 +45,7 @@ public sealed class PuniView
         shadow = shadowObject.AddComponent<Image>();
         shadow.sprite = circleSprite;
         shadow.color = new Color(0.35f, 0.30f, 0.22f, 0.18f);
+        shadow.raycastTarget = false;
 
         var root = new GameObject("PuniView");
         root.transform.SetParent(parent, false);
@@ -58,6 +59,7 @@ public sealed class PuniView
         body = root.AddComponent<Image>();
         body.sprite = circleSprite;
         body.material = null;
+        body.raycastTarget = false;
 
         lowerShade = CreateShape(root.transform, "LowerShade", new Vector2(18f, -58f), new Vector2(170f, 95f), new Color(0.86f, 0.62f, 0.30f, 0.13f), -4f);
         bodyHighlight = CreateShape(root.transform, "BodyHighlight", new Vector2(-42f, 58f), new Vector2(88f, 56f), new Color(1f, 1f, 1f, 0.33f), -22f);
@@ -85,6 +87,7 @@ public sealed class PuniView
         rightCheek = CreateShape(root.transform, "RightCheek", new Vector2(78f, -12f), new Vector2(32f, 22f), new Color(1f, 0.67f, 0.58f, 0.72f), 0f);
 
         stageText = CreateText(root.transform, "Stage", TextAnchor.MiddleCenter, 22, new Vector2(0f, -150f), new Vector2(320f, 42f));
+        stageText.raycastTarget = false;
     }
 
     public void Refresh(SaveData data)
@@ -136,12 +139,13 @@ public sealed class PuniView
 
     public void Tick(float time, float deltaTime)
     {
-        float idleY = Mathf.Sin(time * 2.1f) * 5f;
-        float idleX = Mathf.Sin(time * 1.25f) * 2f;
+        float idleY = Mathf.Sin(time * 2.1f) * 9f;
+        float idleX = Mathf.Sin(time * 1.25f) * 3.5f;
         float reactionProgress = 0f;
         Vector2 reactionOffset = Vector2.zero;
         Vector3 reactionScale = Vector3.one;
-        float rotation = Mathf.Sin(time * 1.8f) * 1.5f;
+        float rotation = Mathf.Sin(time * 1.8f) * 2.6f;
+        Vector3 breathScale = new Vector3(1f + Mathf.Sin(time * 2.0f) * 0.025f, 1f + Mathf.Cos(time * 2.0f) * 0.018f, 1f);
 
         if (hasReaction)
         {
@@ -155,20 +159,20 @@ public sealed class PuniView
         }
 
         rootRect.anchoredPosition = basePosition + new Vector2(idleX, idleY) + reactionOffset;
-        rootRect.localScale = Vector3.Scale(baseScale, reactionScale);
+        rootRect.localScale = Vector3.Scale(baseScale, Vector3.Scale(reactionScale, breathScale));
         rootRect.localRotation = Quaternion.Euler(0f, 0f, rotation);
         shadowRect.anchoredPosition = basePosition + new Vector2(idleX * 0.35f, -126f);
         float shadowSquash = Mathf.Clamp01(1f - (idleY + reactionOffset.y) / 120f);
         shadowRect.localScale = new Vector3(baseScale.x * (0.95f + shadowSquash * 0.12f), baseScale.y * (0.86f - shadowSquash * 0.08f), 1f);
         shadow.color = new Color(0.35f, 0.30f, 0.22f, 0.14f + shadowSquash * 0.07f);
 
-        float wingFlap = Mathf.Sin(time * 6.5f) * 8f;
+        float wingFlap = Mathf.Sin(time * 6.5f) * 13f;
         leftWing.rectTransform.localRotation = Quaternion.Euler(0f, 0f, 28f + wingFlap);
         rightWing.rectTransform.localRotation = Quaternion.Euler(0f, 0f, -28f - wingFlap);
-        sproutLeft.rectTransform.localRotation = Quaternion.Euler(0f, 0f, -32f + Mathf.Sin(time * 3.2f) * 5f);
-        sproutRight.rectTransform.localRotation = Quaternion.Euler(0f, 0f, 38f + Mathf.Sin(time * 3.1f + 0.8f) * 5f);
-        bodyHighlight.rectTransform.anchoredPosition = highlightBasePosition + new Vector2(Mathf.Sin(time * 1.4f) * 1.5f, Mathf.Sin(time * 1.8f) * 1.2f);
-        lowerShade.rectTransform.anchoredPosition = lowerShadeBasePosition + new Vector2(Mathf.Sin(time * 1.1f) * 1.2f, 0f);
+        sproutLeft.rectTransform.localRotation = Quaternion.Euler(0f, 0f, -32f + Mathf.Sin(time * 3.2f) * 8f);
+        sproutRight.rectTransform.localRotation = Quaternion.Euler(0f, 0f, 38f + Mathf.Sin(time * 3.1f + 0.8f) * 8f);
+        bodyHighlight.rectTransform.anchoredPosition = highlightBasePosition + new Vector2(Mathf.Sin(time * 1.4f) * 2.8f, Mathf.Sin(time * 1.8f) * 2.2f);
+        lowerShade.rectTransform.anchoredPosition = lowerShadeBasePosition + new Vector2(Mathf.Sin(time * 1.1f) * 2.4f, 0f);
 
         ApplyBlink(time);
     }
@@ -195,31 +199,31 @@ public sealed class PuniView
         switch (reactionAction)
         {
             case CareActionType.Feed:
-                offset.y += pulse * 10f;
-                scale = new Vector3(1f + pulse * 0.10f, 1f - pulse * 0.06f, 1f);
+                offset.y += pulse * 18f;
+                scale = new Vector3(1f + pulse * 0.16f, 1f - pulse * 0.10f, 1f);
                 break;
             case CareActionType.Play:
-                offset.y += Mathf.Abs(fastPulse) * 26f;
-                rotation += fastPulse * 8f;
-                scale = Vector3.one * (1f + pulse * 0.06f);
+                offset.y += Mathf.Abs(fastPulse) * 42f;
+                rotation += fastPulse * 12f;
+                scale = Vector3.one * (1f + pulse * 0.10f);
                 break;
             case CareActionType.Clean:
-                offset.x += Mathf.Sin(progress * Mathf.PI * 8f) * 9f * pulse;
-                rotation += Mathf.Sin(progress * Mathf.PI * 8f) * 4f * pulse;
-                scale = Vector3.one * (1f + pulse * 0.04f);
+                offset.x += Mathf.Sin(progress * Mathf.PI * 8f) * 15f * pulse;
+                rotation += Mathf.Sin(progress * Mathf.PI * 8f) * 8f * pulse;
+                scale = Vector3.one * (1f + pulse * 0.07f);
                 break;
             case CareActionType.Sleep:
-                offset.y -= pulse * 8f;
-                rotation -= pulse * 5f;
-                scale = new Vector3(1f + pulse * 0.04f, 1f - pulse * 0.03f, 1f);
+                offset.y -= pulse * 15f;
+                rotation -= pulse * 8f;
+                scale = new Vector3(1f + pulse * 0.08f, 1f - pulse * 0.08f, 1f);
                 break;
             case CareActionType.Study:
-                rotation += Mathf.Sin(progress * Mathf.PI * 5f) * 6f * pulse;
+                rotation += Mathf.Sin(progress * Mathf.PI * 5f) * 10f * pulse;
                 break;
             case CareActionType.Train:
-                offset.y += pulse * 14f;
-                scale = new Vector3(1f + pulse * 0.13f, 1f + pulse * 0.05f, 1f);
-                rotation += Mathf.Sin(progress * Mathf.PI * 6f) * 5f * pulse;
+                offset.y += pulse * 24f;
+                scale = new Vector3(1f + pulse * 0.18f, 1f + pulse * 0.09f, 1f);
+                rotation += Mathf.Sin(progress * Mathf.PI * 6f) * 8f * pulse;
                 break;
         }
     }
@@ -325,6 +329,7 @@ public sealed class PuniView
         var image = shape.AddComponent<Image>();
         image.sprite = circleSprite;
         image.color = color;
+        image.raycastTarget = false;
         image.rectTransform.anchorMin = new Vector2(0.5f, 0.5f);
         image.rectTransform.anchorMax = new Vector2(0.5f, 0.5f);
         image.rectTransform.pivot = new Vector2(0.5f, 0.5f);
@@ -345,6 +350,7 @@ public sealed class PuniView
         text.horizontalOverflow = HorizontalWrapMode.Wrap;
         text.verticalOverflow = VerticalWrapMode.Truncate;
         text.color = new Color(0.18f, 0.20f, 0.24f);
+        text.raycastTarget = false;
         text.rectTransform.anchorMin = new Vector2(0.5f, 0.5f);
         text.rectTransform.anchorMax = new Vector2(0.5f, 0.5f);
         text.rectTransform.pivot = new Vector2(0.5f, 0.5f);

@@ -5,6 +5,7 @@ public sealed class StatusBarView
 {
     private readonly Slider slider;
     private readonly Text label;
+    private readonly Text valueText;
     private readonly Image fill;
     private readonly Color normalColor;
     private readonly string name;
@@ -32,6 +33,12 @@ public sealed class StatusBarView
         label.rectTransform.anchorMin = new Vector2(0f, 0f);
         label.rectTransform.anchorMax = new Vector2(0f, 1f);
 
+        valueText = CreateText(root.transform, "Value", TextAnchor.MiddleRight, new Vector2(36f, size.y), fontSize);
+        valueText.rectTransform.anchorMin = new Vector2(1f, 0f);
+        valueText.rectTransform.anchorMax = new Vector2(1f, 1f);
+        valueText.rectTransform.pivot = new Vector2(1f, 0.5f);
+        valueText.rectTransform.anchoredPosition = new Vector2(0f, 0f);
+
         var sliderObject = new GameObject("Slider");
         sliderObject.transform.SetParent(root.transform, false);
         slider = sliderObject.AddComponent<Slider>();
@@ -42,9 +49,10 @@ public sealed class StatusBarView
         sliderRect.anchorMin = new Vector2(0f, 0f);
         sliderRect.anchorMax = new Vector2(1f, 1f);
         sliderRect.offsetMin = new Vector2(sliderLeft, 7f);
-        sliderRect.offsetMax = new Vector2(0f, -7f);
+        sliderRect.offsetMax = new Vector2(-42f, -7f);
 
-        var background = CreateImage(sliderObject.transform, "Background", new Color(0.82f, 0.86f, 0.88f));
+        var background = CreateImage(sliderObject.transform, "Background", new Color(1f, 0.96f, 0.88f, 0.72f));
+        PuniTheme.ApplyRounded(background, new Color(1f, 0.96f, 0.88f, 0.72f));
         background.rectTransform.anchorMin = Vector2.zero;
         background.rectTransform.anchorMax = Vector2.one;
         background.rectTransform.offsetMin = Vector2.zero;
@@ -59,6 +67,7 @@ public sealed class StatusBarView
         fillAreaRect.offsetMax = Vector2.zero;
 
         fill = CreateImage(fillArea.transform, "Fill", normalColor);
+        PuniTheme.ApplyRounded(fill, normalColor);
         fill.rectTransform.anchorMin = Vector2.zero;
         fill.rectTransform.anchorMax = Vector2.one;
         fill.rectTransform.offsetMin = Vector2.zero;
@@ -72,7 +81,8 @@ public sealed class StatusBarView
     public void SetValue(int value)
     {
         slider.value = value;
-        label.text = $"{name} {value}";
+        label.text = name;
+        valueText.text = value.ToString();
         fill.color = value <= Constants.LowStatusThreshold ? new Color(0.88f, 0.28f, 0.30f) : normalColor;
     }
 
@@ -96,6 +106,7 @@ public sealed class StatusBarView
         text.horizontalOverflow = HorizontalWrapMode.Overflow;
         text.verticalOverflow = VerticalWrapMode.Truncate;
         text.color = new Color(0.18f, 0.21f, 0.23f);
+        text.raycastTarget = false;
         text.rectTransform.sizeDelta = size;
         return text;
     }
