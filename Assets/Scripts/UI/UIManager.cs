@@ -406,6 +406,7 @@ public sealed class UIManager : MonoBehaviour
 
         var button = buttonObject.AddComponent<Button>();
         button.onClick.AddListener(PlayButtonSound);
+        button.onClick.AddListener(visual.PlayPress);
         button.onClick.AddListener(onClick);
 
         var rect = buttonObject.GetComponent<RectTransform>();
@@ -456,12 +457,23 @@ public sealed class UIManager : MonoBehaviour
 public sealed class PuniButtonVisual : MonoBehaviour
 {
     private Image image;
+    private RectTransform rectTransform;
     private Color normalColor;
+    private Vector3 baseScale = Vector3.one;
+    private float pressTimer;
+    private const float PressDuration = 0.22f;
 
     public void Initialize(Image targetImage, Color color)
     {
         image = targetImage;
+        rectTransform = targetImage.rectTransform;
+        baseScale = rectTransform.localScale;
         normalColor = color;
+    }
+
+    public void PlayPress()
+    {
+        pressTimer = PressDuration;
     }
 
     public void SetInteractable(bool interactable)
@@ -470,6 +482,29 @@ public sealed class PuniButtonVisual : MonoBehaviour
         {
             image.color = interactable ? normalColor : PuniTheme.Disabled;
         }
+    }
+
+    private void Update()
+    {
+        if (rectTransform == null)
+        {
+            return;
+        }
+
+        if (pressTimer <= 0f)
+        {
+            rectTransform.localScale = Vector3.Lerp(rectTransform.localScale, baseScale, Time.deltaTime * 14f);
+            return;
+        }
+
+        pressTimer = Mathf.Max(0f, pressTimer - Time.deltaTime);
+        float progress = 1f - pressTimer / PressDuration;
+        float squash = Mathf.Sin(progress * Mathf.PI);
+        float rebound = Mathf.Sin(progress * Mathf.PI * 2f) * 0.03f;
+        rectTransform.localScale = new Vector3(
+            baseScale.x * (1f + squash * 0.07f + rebound),
+            baseScale.y * (1f - squash * 0.05f),
+            baseScale.z);
     }
 }
 

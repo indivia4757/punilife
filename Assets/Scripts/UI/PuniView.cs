@@ -12,6 +12,8 @@ public sealed class PuniView
     private readonly Image shell;
     private readonly Image leftEye;
     private readonly Image rightEye;
+    private readonly Image leftEyeHighlight;
+    private readonly Image rightEyeHighlight;
     private readonly Image mouth;
     private readonly Image leftCheek;
     private readonly Image rightCheek;
@@ -21,15 +23,17 @@ public sealed class PuniView
     private readonly Image rightWing;
     private readonly Image[] spots;
     private readonly Text stageText;
+    private readonly Text actionMarkText;
     private readonly Sprite circleSprite;
     private readonly Vector2 basePosition = new Vector2(0f, -65f);
     private Vector2 highlightBasePosition = new Vector2(-42f, 58f);
     private readonly Vector2 lowerShadeBasePosition = new Vector2(18f, -58f);
+    private PuniStatus currentStatus = new PuniStatus();
     private Vector3 baseScale = Vector3.one;
     private CareActionType reactionAction;
     private float reactionTimer;
     private bool hasReaction;
-    private const float ReactionDuration = 0.85f;
+    private const float ReactionDuration = 1.05f;
 
     public PuniView(Transform parent)
     {
@@ -80,18 +84,22 @@ public sealed class PuniView
 
         leftEye = CreateShape(root.transform, "LeftEye", new Vector2(-46f, 22f), new Vector2(34f, 48f), new Color(0.12f, 0.08f, 0.06f), 0f);
         rightEye = CreateShape(root.transform, "RightEye", new Vector2(46f, 22f), new Vector2(34f, 48f), new Color(0.12f, 0.08f, 0.06f), 0f);
-        CreateShape(leftEye.transform, "LeftEyeHighlight", new Vector2(8f, 12f), new Vector2(11f, 14f), Color.white, 0f);
-        CreateShape(rightEye.transform, "RightEyeHighlight", new Vector2(8f, 12f), new Vector2(11f, 14f), Color.white, 0f);
+        leftEyeHighlight = CreateShape(leftEye.transform, "LeftEyeHighlight", new Vector2(8f, 12f), new Vector2(11f, 14f), Color.white, 0f);
+        rightEyeHighlight = CreateShape(rightEye.transform, "RightEyeHighlight", new Vector2(8f, 12f), new Vector2(11f, 14f), Color.white, 0f);
         mouth = CreateShape(root.transform, "Mouth", new Vector2(0f, -20f), new Vector2(34f, 26f), new Color(0.72f, 0.12f, 0.07f), 0f);
         leftCheek = CreateShape(root.transform, "LeftCheek", new Vector2(-78f, -12f), new Vector2(32f, 22f), new Color(1f, 0.67f, 0.58f, 0.72f), 0f);
         rightCheek = CreateShape(root.transform, "RightCheek", new Vector2(78f, -12f), new Vector2(32f, 22f), new Color(1f, 0.67f, 0.58f, 0.72f), 0f);
 
         stageText = CreateText(root.transform, "Stage", TextAnchor.MiddleCenter, 22, new Vector2(0f, -150f), new Vector2(320f, 42f));
         stageText.raycastTarget = false;
+        actionMarkText = CreateText(root.transform, "ActionMark", TextAnchor.MiddleCenter, 28, new Vector2(0f, 114f), new Vector2(180f, 48f));
+        actionMarkText.color = new Color(0.72f, 0.45f, 0.18f);
+        actionMarkText.gameObject.SetActive(false);
     }
 
     public void Refresh(SaveData data)
     {
+        currentStatus = data.status;
         bool isEgg = data.stage == PuniStage.Egg;
         body.color = GetBodyColor(data);
         body.rectTransform.sizeDelta = isEgg ? new Vector2(150f, 205f) : new Vector2(214f, 225f);
@@ -106,6 +114,8 @@ public sealed class PuniView
         sproutRight.gameObject.SetActive(!isEgg);
         leftEye.gameObject.SetActive(!isEgg);
         rightEye.gameObject.SetActive(!isEgg);
+        leftEyeHighlight.gameObject.SetActive(!isEgg);
+        rightEyeHighlight.gameObject.SetActive(!isEgg);
         mouth.gameObject.SetActive(!isEgg);
         leftCheek.gameObject.SetActive(!isEgg);
         rightCheek.gameObject.SetActive(!isEgg);
@@ -155,6 +165,7 @@ public sealed class PuniView
             if (reactionTimer <= 0f)
             {
                 hasReaction = false;
+                actionMarkText.gameObject.SetActive(false);
             }
         }
 
@@ -174,7 +185,16 @@ public sealed class PuniView
         bodyHighlight.rectTransform.anchoredPosition = highlightBasePosition + new Vector2(Mathf.Sin(time * 1.4f) * 2.8f, Mathf.Sin(time * 1.8f) * 2.2f);
         lowerShade.rectTransform.anchoredPosition = lowerShadeBasePosition + new Vector2(Mathf.Sin(time * 1.1f) * 2.4f, 0f);
 
-        ApplyBlink(time);
+        if (hasReaction && leftEye.gameObject.activeSelf)
+        {
+            ApplyReactionFace(reactionProgress);
+        }
+        else
+        {
+            actionMarkText.gameObject.SetActive(false);
+            ApplyMood(currentStatus);
+            ApplyBlink(time);
+        }
     }
 
     public void PlayReaction(CareActionType action)
@@ -199,31 +219,86 @@ public sealed class PuniView
         switch (reactionAction)
         {
             case CareActionType.Feed:
-                offset.y += pulse * 18f;
-                scale = new Vector3(1f + pulse * 0.16f, 1f - pulse * 0.10f, 1f);
+                offset.y += pulse * 14f;
+                offset.x += Mathf.Sin(progress * Mathf.PI * 6f) * 5f * pulse;
+                scale = new Vector3(1f + pulse * 0.20f, 1f - pulse * 0.12f, 1f);
                 break;
             case CareActionType.Play:
-                offset.y += Mathf.Abs(fastPulse) * 42f;
-                rotation += fastPulse * 12f;
-                scale = Vector3.one * (1f + pulse * 0.10f);
+                offset.y += Mathf.Abs(fastPulse) * 52f;
+                offset.x += Mathf.Sin(progress * Mathf.PI * 4f) * 18f * pulse;
+                rotation += fastPulse * 15f;
+                scale = Vector3.one * (1f + pulse * 0.12f);
                 break;
             case CareActionType.Clean:
-                offset.x += Mathf.Sin(progress * Mathf.PI * 8f) * 15f * pulse;
-                rotation += Mathf.Sin(progress * Mathf.PI * 8f) * 8f * pulse;
-                scale = Vector3.one * (1f + pulse * 0.07f);
+                offset.x += Mathf.Sin(progress * Mathf.PI * 10f) * 18f * pulse;
+                offset.y += Mathf.Abs(Mathf.Sin(progress * Mathf.PI * 5f)) * 10f * pulse;
+                rotation += Mathf.Sin(progress * Mathf.PI * 8f) * 10f * pulse;
+                scale = Vector3.one * (1f + pulse * 0.08f);
                 break;
             case CareActionType.Sleep:
-                offset.y -= pulse * 15f;
-                rotation -= pulse * 8f;
-                scale = new Vector3(1f + pulse * 0.08f, 1f - pulse * 0.08f, 1f);
+                offset.y -= pulse * 22f;
+                rotation -= pulse * 12f;
+                scale = new Vector3(1f + pulse * 0.12f, 1f - pulse * 0.13f, 1f);
                 break;
             case CareActionType.Study:
-                rotation += Mathf.Sin(progress * Mathf.PI * 5f) * 10f * pulse;
+                offset.y += Mathf.Sin(progress * Mathf.PI * 3f) * 8f * pulse;
+                rotation += Mathf.Sin(progress * Mathf.PI * 5f) * 9f * pulse;
                 break;
             case CareActionType.Train:
-                offset.y += pulse * 24f;
-                scale = new Vector3(1f + pulse * 0.18f, 1f + pulse * 0.09f, 1f);
-                rotation += Mathf.Sin(progress * Mathf.PI * 6f) * 8f * pulse;
+                offset.y += Mathf.Abs(fastPulse) * 22f;
+                offset.x += Mathf.Sin(progress * Mathf.PI * 8f) * 14f * pulse;
+                scale = new Vector3(1f + pulse * 0.22f, 1f + pulse * 0.10f, 1f);
+                rotation += Mathf.Sin(progress * Mathf.PI * 6f) * 10f * pulse;
+                break;
+        }
+    }
+
+    private void ApplyReactionFace(float progress)
+    {
+        float pulse = Mathf.Sin(progress * Mathf.PI);
+        actionMarkText.gameObject.SetActive(true);
+        actionMarkText.rectTransform.anchoredPosition = new Vector2(0f, 116f + pulse * 18f);
+        actionMarkText.color = new Color(0.72f, 0.45f, 0.18f, 0.25f + pulse * 0.75f);
+        actionMarkText.rectTransform.localScale = Vector3.one * (1f + pulse * 0.18f);
+
+        leftEye.color = new Color(0.12f, 0.08f, 0.06f);
+        rightEye.color = leftEye.color;
+        leftCheek.color = new Color(1f, 0.67f, 0.58f, 0.72f + pulse * 0.18f);
+        rightCheek.color = leftCheek.color;
+        leftCheek.rectTransform.sizeDelta = new Vector2(32f + pulse * 10f, 22f + pulse * 6f);
+        rightCheek.rectTransform.sizeDelta = leftCheek.rectTransform.sizeDelta;
+
+        switch (reactionAction)
+        {
+            case CareActionType.Feed:
+                actionMarkText.text = "냠냠";
+                SetEyes(new Vector2(28f, 12f), new Vector2(-46f, 28f), new Vector2(46f, 28f), -8f, 8f);
+                SetMouth(new Vector2(42f + pulse * 10f, 30f + pulse * 8f), new Vector2(0f, -22f), new Color(0.78f, 0.16f, 0.08f));
+                break;
+            case CareActionType.Play:
+                actionMarkText.text = "♪";
+                SetEyes(new Vector2(38f + pulse * 6f, 54f + pulse * 5f), new Vector2(-48f, 24f), new Vector2(48f, 24f), 0f, 0f);
+                SetMouth(new Vector2(48f + pulse * 12f, 38f + pulse * 8f), new Vector2(0f, -24f), new Color(0.78f, 0.12f, 0.07f));
+                break;
+            case CareActionType.Clean:
+                actionMarkText.text = "반짝";
+                SetEyes(new Vector2(34f, 42f), new Vector2(-46f, 24f), new Vector2(46f, 24f), -3f, 3f);
+                SetMouth(new Vector2(34f, 16f), new Vector2(0f, -22f), new Color(0.78f, 0.16f, 0.08f));
+                break;
+            case CareActionType.Sleep:
+                actionMarkText.text = "Zz";
+                SetEyes(new Vector2(34f, 7f), new Vector2(-46f, 27f), new Vector2(46f, 27f), 0f, 0f);
+                SetMouth(new Vector2(20f + pulse * 6f, 18f), new Vector2(0f, -20f), new Color(0.18f, 0.20f, 0.24f));
+                break;
+            case CareActionType.Study:
+                actionMarkText.text = "?";
+                SetEyes(new Vector2(24f, 38f), new Vector2(-42f, 24f), new Vector2(42f, 24f), 0f, 0f);
+                SetMouth(new Vector2(24f, 8f), new Vector2(0f, -20f), new Color(0.18f, 0.20f, 0.24f));
+                break;
+            case CareActionType.Train:
+                actionMarkText.text = "!";
+                SetEyes(new Vector2(38f, 18f), new Vector2(-46f, 28f), new Vector2(46f, 28f), 14f, -14f);
+                SetMouth(new Vector2(34f, 10f), new Vector2(0f, -20f), new Color(0.18f, 0.20f, 0.24f));
                 break;
         }
     }
@@ -260,6 +335,12 @@ public sealed class PuniView
 
     private void ApplyMood(PuniStatus status)
     {
+        if (status == null)
+        {
+            status = currentStatus ?? new PuniStatus();
+        }
+
+        ResetFace();
         mouth.color = new Color(0.72f, 0.12f, 0.07f);
         mouth.rectTransform.sizeDelta = new Vector2(34f, 26f);
         mouth.rectTransform.anchoredPosition = new Vector2(0f, -20f);
@@ -291,6 +372,37 @@ public sealed class PuniView
         rightEye.color = leftEye.color;
     }
 
+    private void ResetFace()
+    {
+        SetEyes(new Vector2(34f, 48f), new Vector2(-46f, 22f), new Vector2(46f, 22f), 0f, 0f);
+        SetMouth(new Vector2(34f, 26f), new Vector2(0f, -20f), new Color(0.72f, 0.12f, 0.07f));
+        leftCheek.rectTransform.sizeDelta = new Vector2(32f, 22f);
+        rightCheek.rectTransform.sizeDelta = new Vector2(32f, 22f);
+        leftCheek.color = new Color(1f, 0.67f, 0.58f, 0.72f);
+        rightCheek.color = leftCheek.color;
+    }
+
+    private void SetEyes(Vector2 size, Vector2 leftPosition, Vector2 rightPosition, float leftRotation, float rightRotation)
+    {
+        leftEye.rectTransform.sizeDelta = size;
+        rightEye.rectTransform.sizeDelta = size;
+        leftEye.rectTransform.anchoredPosition = leftPosition;
+        rightEye.rectTransform.anchoredPosition = rightPosition;
+        leftEye.rectTransform.localRotation = Quaternion.Euler(0f, 0f, leftRotation);
+        rightEye.rectTransform.localRotation = Quaternion.Euler(0f, 0f, rightRotation);
+        bool showHighlights = size.y > 20f;
+        leftEyeHighlight.gameObject.SetActive(leftEye.gameObject.activeSelf && showHighlights);
+        rightEyeHighlight.gameObject.SetActive(rightEye.gameObject.activeSelf && showHighlights);
+    }
+
+    private void SetMouth(Vector2 size, Vector2 position, Color color)
+    {
+        mouth.rectTransform.sizeDelta = size;
+        mouth.rectTransform.anchoredPosition = position;
+        mouth.rectTransform.localRotation = Quaternion.identity;
+        mouth.color = color;
+    }
+
     private void ApplyBlink(float time)
     {
         if (!leftEye.gameObject.activeSelf || !rightEye.gameObject.activeSelf)
@@ -303,6 +415,8 @@ public sealed class PuniView
         Vector2 eyeSize = blinking ? new Vector2(34f, 8f) : new Vector2(34f, 48f);
         leftEye.rectTransform.sizeDelta = eyeSize;
         rightEye.rectTransform.sizeDelta = eyeSize;
+        leftEyeHighlight.gameObject.SetActive(!blinking);
+        rightEyeHighlight.gameObject.SetActive(!blinking);
     }
 
     private void ResetSpotParent()
