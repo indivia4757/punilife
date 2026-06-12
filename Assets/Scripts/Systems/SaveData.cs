@@ -17,6 +17,8 @@ public sealed class SaveData
     public bool tutorialCompleted;
     public int totalCareActions;
     public int totalMiniGamePlays;
+    public int currentMonth = 1;
+    public List<int> monthlySchedule = new List<int>();
     public string firstPlayedAt = string.Empty;
     public string lastSavedAt = string.Empty;
 
@@ -48,11 +50,19 @@ public sealed class SaveData
         {
             ownedItemIds = new List<int>();
         }
+
+        if (monthlySchedule == null)
+        {
+            monthlySchedule = new List<int>();
+        }
+
         version = Constants.SaveDataVersion;
         if (string.IsNullOrWhiteSpace(puniName))
         {
             puniName = "푸니";
         }
+
+        EnsureMonthlySchedule();
 
         EnsureDexEntry(PuniEvolutionType.Sunny);
         EnsureDexEntry(PuniEvolutionType.Scholar);
@@ -73,6 +83,34 @@ public sealed class SaveData
 
         status.Clamp();
         growthStats.Clamp();
+    }
+
+    public void EnsureMonthlySchedule()
+    {
+        if (monthlySchedule == null)
+        {
+            monthlySchedule = new List<int>();
+        }
+
+        while (monthlySchedule.Count < Constants.MonthlyScheduleWeeks)
+        {
+            monthlySchedule.Add((int)CareActionType.Play);
+        }
+
+        while (monthlySchedule.Count > Constants.MonthlyScheduleWeeks)
+        {
+            monthlySchedule.RemoveAt(monthlySchedule.Count - 1);
+        }
+
+        for (int i = 0; i < monthlySchedule.Count; i++)
+        {
+            if (!System.Enum.IsDefined(typeof(CareActionType), monthlySchedule[i]))
+            {
+                monthlySchedule[i] = (int)CareActionType.Play;
+            }
+        }
+
+        currentMonth = Math.Max(1, currentMonth);
     }
 
     private void EnsureDexEntry(PuniEvolutionType type)

@@ -15,6 +15,7 @@ public sealed class GameManager : MonoBehaviour
     public PuniController Puni { get; private set; }
     public string LastMessage { get; private set; } = "푸니 라이프에 오신 것을 환영해요.";
     public string PuniSpeech { get; private set; } = "안녕... 나를 돌봐줄래?";
+    public string LastMonthlyReport { get; private set; } = "아직 이번 달 일정 결과가 없어요.";
     public int LastOfflineHours { get; private set; }
     public OfflineProgressResult LastOfflineProgress { get; private set; }
 
@@ -118,48 +119,105 @@ public sealed class GameManager : MonoBehaviour
         uiManager.Refresh();
     }
 
-    public void RunWeeklyPlan()
+    public CareActionType GetMonthlyScheduleAction(int weekIndex)
     {
-        CareActionType[] plan = BuildWeeklyPlan(Puni.Data);
+        SaveData data = Puni.Data;
+        data.EnsureMonthlySchedule();
+        int index = Mathf.Clamp(weekIndex, 0, Constants.MonthlyScheduleWeeks - 1);
+        return (CareActionType)data.monthlySchedule[index];
+    }
+
+    public void CycleMonthlySchedule(int weekIndex)
+    {
+        SaveData data = Puni.Data;
+        data.EnsureMonthlySchedule();
+        int index = Mathf.Clamp(weekIndex, 0, Constants.MonthlyScheduleWeeks - 1);
+        CareActionType current = (CareActionType)data.monthlySchedule[index];
+        data.monthlySchedule[index] = (int)GetNextScheduleAction(current, data.stage);
+        LastMessage = $"{index + 1}주차 일정을 {GetScheduleName((CareActionType)data.monthlySchedule[index])}(으)로 정했어요.";
+        PuniSpeech = "이번 달 계획이 조금씩 보이는 것 같아.";
+        audioManager.PlayButtonClick();
+        Save();
+        uiManager.Refresh();
+    }
+
+    public void RunMonthlyPlan()
+    {
+        SaveData data = Puni.Data;
+        data.EnsureMonthlySchedule();
         int appliedCount = 0;
         CareActionType lastApplied = CareActionType.Play;
-        PuniStage previousStage = Puni.Data.stage;
-        PuniEvolutionType previousEvolution = Puni.Data.evolutionType;
+        PuniStage previousStage = data.stage;
+        PuniEvolutionType previousEvolution = data.evolutionType;
+        int beforeCoin = data.status.coin;
+        int beforeLevel = data.status.level;
+        int beforeStress = data.status.stress;
+        int beforeIntelligence = data.growthStats.intelligence;
+        int beforeStrength = data.growthStats.strength;
+        int beforeSensitivity = data.growthStats.sensitivity;
+        int beforeCourage = data.growthStats.courage;
+        int beforeKindness = data.growthStats.kindness;
+        string actionSummary = string.Empty;
 
-        for (int i = 0; i < plan.Length; i++)
+        for (int i = 0; i < data.monthlySchedule.Count; i++)
         {
-            if (Puni.PerformCare(plan[i], out _))
+            CareActionType action = (CareActionType)data.monthlySchedule[i];
+            if (Puni.PerformCare(action, out string message))
             {
                 appliedCount++;
-                lastApplied = plan[i];
+                lastApplied = action;
+                actionSummary += $"{i + 1}주 {GetScheduleName(action)} 성공";
+            }
+            else
+            {
+                actionSummary += $"{i + 1}주 {GetScheduleName(action)} 실패";
+            }
+
+            if (i < data.monthlySchedule.Count - 1)
+            {
+                actionSummary += " / ";
             }
         }
 
         if (appliedCount == 0)
         {
-            LastMessage = "이번 주 일정을 진행하지 못했어요. 컨디션과 코인을 확인해주세요.";
-            PuniSpeech = "오늘은 조금 무리인 것 같아.";
+            LastMessage = "이번 달 일정을 진행하지 못했어요. 컨디션과 코인을 확인해주세요.";
+            PuniSpeech = "이번 달은 조금 무리인 것 같아.";
+            LastMonthlyReport = $"{data.currentMonth}월 결과: 모든 일정 실패\n피로와 코인을 회복한 뒤 다시 계획하세요.";
             audioManager.PlayError();
             uiManager.Refresh();
             return;
         }
 
-        if (Puni.Data.stage == PuniStage.Evolved &&
-            (previousStage != PuniStage.Evolved || previousEvolution != Puni.Data.evolutionType))
+        int coinDelta = data.status.coin - beforeCoin;
+        int stressDelta = data.status.stress - beforeStress;
+        int intelligenceDelta = data.growthStats.intelligence - beforeIntelligence;
+        int strengthDelta = data.growthStats.strength - beforeStrength;
+        int sensitivityDelta = data.growthStats.sensitivity - beforeSensitivity;
+        int courageDelta = data.growthStats.courage - beforeCourage;
+        int kindnessDelta = data.growthStats.kindness - beforeKindness;
+        string report = $"{data.currentMonth}월 결과: {actionSummary}\n";
+        report += $"코인 {FormatDelta(coinDelta)}  피로 {FormatDelta(stressDelta)}  Lv {beforeLevel}->{data.status.level}\n";
+        report += $"능력: 지능 {FormatDelta(intelligenceDelta)} 체력 {FormatDelta(strengthDelta)} 감성 {FormatDelta(sensitivityDelta)} 용기 {FormatDelta(courageDelta)} 다정함 {FormatDelta(kindnessDelta)}";
+        LastMonthlyReport = report;
+        data.currentMonth++;
+
+        if (data.stage == PuniStage.Evolved &&
+            (previousStage != PuniStage.Evolved || previousEvolution != data.evolutionType))
         {
-            LastMessage = $"이번 주 일정을 마치고 {PuniText.EvolutionName(Puni.Data.evolutionType)}로 진화했어요.";
-            PuniSpeech = "이번 주가 나를 바꿨어!";
+            LastMessage = $"이번 달 일정을 마치고 {PuniText.EvolutionName(data.evolutionType)}로 진화했어요.";
+            PuniSpeech = "이번 달이 나를 바꿨어!";
             audioManager.PlayEvolution();
         }
-        else if (Puni.Data.stage != previousStage)
+        else if (data.stage != previousStage)
         {
-            LastMessage = $"이번 주 일정을 마치고 {PuniText.StageName(Puni.Data.stage)}로 성장했어요.";
+            LastMessage = $"이번 달 일정을 마치고 {PuniText.StageName(data.stage)}로 성장했어요.";
             PuniSpeech = "나 조금 자란 것 같지?";
             audioManager.PlayReward();
         }
         else
         {
-            LastMessage = $"이번 주 일정 {appliedCount}개를 마쳤어요. 마지막 일정: {GetScheduleName(lastApplied)}";
+            LastMessage = $"이번 달 일정 {appliedCount}개를 마쳤어요. 마지막 일정: {GetScheduleName(lastApplied)}";
             PuniSpeech = BuildWeeklySpeech(lastApplied);
             audioManager.PlayReward();
         }
@@ -265,6 +323,7 @@ public sealed class GameManager : MonoBehaviour
             Puni.Data.status.happiness = Mathf.Max(Puni.Data.status.happiness, 60);
             Puni.Data.status.cleanliness = Mathf.Max(Puni.Data.status.cleanliness, 60);
             Puni.Data.status.energy = Mathf.Max(Puni.Data.status.energy, 60);
+            Puni.Data.status.stress = Mathf.Min(Puni.Data.status.stress, 25);
             Puni.Data.growthStats.neglect = Mathf.Max(0, Puni.Data.growthStats.neglect - 5);
             Puni.Data.status.Clamp();
             Puni.Data.growthStats.Clamp();
@@ -512,6 +571,25 @@ public sealed class GameManager : MonoBehaviour
         return new[] { CareActionType.Play, CareActionType.Clean, CareActionType.Sleep };
     }
 
+    private static CareActionType GetNextScheduleAction(CareActionType current, PuniStage stage)
+    {
+        CareActionType[] actions = stage == PuniStage.Egg
+            ? new[] { CareActionType.Feed, CareActionType.Play, CareActionType.Sleep }
+            : stage == PuniStage.Baby
+            ? new[] { CareActionType.Feed, CareActionType.Play, CareActionType.Clean, CareActionType.Sleep, CareActionType.Work }
+            : new[] { CareActionType.Feed, CareActionType.Play, CareActionType.Clean, CareActionType.Sleep, CareActionType.Study, CareActionType.Train, CareActionType.Work };
+
+        for (int i = 0; i < actions.Length; i++)
+        {
+            if (actions[i] == current)
+            {
+                return actions[(i + 1) % actions.Length];
+            }
+        }
+
+        return actions[0];
+    }
+
     private static string GetScheduleName(CareActionType action)
     {
         return action switch
@@ -522,8 +600,14 @@ public sealed class GameManager : MonoBehaviour
             CareActionType.Sleep => "휴식",
             CareActionType.Study => "수업",
             CareActionType.Train => "훈련",
+            CareActionType.Work => "알바",
             _ => "일정"
         };
+    }
+
+    private static string FormatDelta(int value)
+    {
+        return value >= 0 ? $"+{value}" : value.ToString();
     }
 
     private static string BuildWeeklySpeech(CareActionType action)
@@ -536,6 +620,7 @@ public sealed class GameManager : MonoBehaviour
             CareActionType.Sleep => "푹 쉬니까 다시 해볼 수 있을 것 같아.",
             CareActionType.Study => "수업은 어렵지만 머리가 반짝이는 느낌이야.",
             CareActionType.Train => "훈련은 힘들지만 조금 강해졌어.",
+            CareActionType.Work => "알바는 힘들었지만 코인을 벌었어.",
             _ => "이번 주도 지나갔어."
         };
     }
@@ -550,6 +635,7 @@ public sealed class GameManager : MonoBehaviour
             CareActionType.Sleep => "잠깐 꿈나라 다녀올게...",
             CareActionType.Study => "새로운 걸 배웠어!",
             CareActionType.Train => "나 조금 강해진 것 같아!",
+            CareActionType.Work => "코인을 벌어왔어!",
             _ => "고마워!"
         };
     }
@@ -564,6 +650,7 @@ public sealed class GameManager : MonoBehaviour
             CareActionType.Sleep => "아직 잠들 준비가 안 됐어.",
             CareActionType.Study => "조금 더 자라면 공부할래.",
             CareActionType.Train => "훈련은 아직 어려워.",
+            CareActionType.Work => "아직 알바는 무리야.",
             _ => "지금은 안 될 것 같아."
         };
     }

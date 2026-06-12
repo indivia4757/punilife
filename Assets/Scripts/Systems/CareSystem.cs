@@ -27,11 +27,18 @@ public sealed class CareSystem
             return false;
         }
 
+        if (status.stress >= 85 && action != CareActionType.Sleep && action != CareActionType.Play)
+        {
+            message = "피로가 너무 쌓여서 쉬어야 해요.";
+            return false;
+        }
+
         status.hunger += effect.hunger;
         status.happiness += effect.happiness;
         status.cleanliness += effect.cleanliness;
         status.energy += effect.energy;
         status.affection += effect.affection;
+        status.stress += effect.stress;
         status.coin += effect.coin;
         status.AddExp(effect.exp);
 
@@ -56,6 +63,7 @@ public sealed class CareSystem
             CareActionType.Feed => new CareActionEffect(
                 hunger: 25,
                 affection: 3,
+                stress: -2,
                 coin: -10,
                 kindness: 1,
                 successMessage: "푸니가 간식을 맛있게 먹었어요."),
@@ -63,6 +71,7 @@ public sealed class CareSystem
                 happiness: 20,
                 energy: -10,
                 affection: 5,
+                stress: -8,
                 exp: 5,
                 sensitivity: 3,
                 kindness: 2,
@@ -70,27 +79,45 @@ public sealed class CareSystem
             CareActionType.Clean => new CareActionEffect(
                 cleanliness: 30,
                 happiness: 5,
+                stress: -4,
                 exp: 3,
                 kindness: 4,
                 successMessage: "푸니가 깨끗해졌어요."),
             CareActionType.Sleep => new CareActionEffect(
                 hunger: -5,
                 energy: 40,
+                stress: -30,
                 sensitivity: 1,
                 successMessage: "푸니가 푹 쉬었어요."),
             CareActionType.Study => new CareActionEffect(
                 happiness: -3,
                 energy: -10,
+                stress: 10,
+                coin: -12,
                 exp: 8,
                 intelligence: 5,
                 sensitivity: 1,
-                successMessage: "푸니가 열심히 공부했어요."),
+                successMessage: "푸니가 수업을 들었어요."),
             CareActionType.Train => new CareActionEffect(
                 energy: -15,
+                happiness: -3,
+                stress: 14,
+                coin: -8,
                 exp: 8,
                 strength: 5,
                 courage: 3,
                 successMessage: "푸니가 씩씩하게 훈련했어요."),
+            CareActionType.Work => new CareActionEffect(
+                hunger: -4,
+                happiness: -6,
+                cleanliness: -4,
+                energy: -18,
+                stress: 18,
+                coin: 28,
+                exp: 4,
+                courage: 2,
+                kindness: 1,
+                successMessage: "푸니가 알바를 마치고 코인을 벌었어요."),
             _ => new CareActionEffect(successMessage: "푸니가 평온해요.")
         };
     }
@@ -102,7 +129,8 @@ public sealed class CareSystem
             return action == CareActionType.Feed ||
                    action == CareActionType.Play ||
                    action == CareActionType.Clean ||
-                   action == CareActionType.Sleep;
+                   action == CareActionType.Sleep ||
+                   action == CareActionType.Work;
         }
 
         if (stage == PuniStage.Egg)
@@ -115,7 +143,8 @@ public sealed class CareSystem
             return action == CareActionType.Feed ||
                    action == CareActionType.Play ||
                    action == CareActionType.Clean ||
-                   action == CareActionType.Sleep;
+                   action == CareActionType.Sleep ||
+                   action == CareActionType.Work;
         }
 
         return true;

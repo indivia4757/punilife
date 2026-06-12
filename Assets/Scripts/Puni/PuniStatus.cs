@@ -9,6 +9,7 @@ public sealed class PuniStatus
     public int cleanliness = Constants.InitialCleanliness;
     public int energy = Constants.InitialEnergy;
     public int affection = Constants.InitialAffection;
+    public int stress;
     public int level = 1;
     public int exp;
     public int coin = Constants.InitialCoin;
@@ -26,6 +27,7 @@ public sealed class PuniStatus
         cleanliness = Mathf.Clamp(cleanliness, Constants.StatusMin, Constants.StatusMax);
         energy = Mathf.Clamp(energy, Constants.StatusMin, Constants.StatusMax);
         affection = Mathf.Clamp(affection, Constants.StatusMin, Constants.StatusMax);
+        stress = Mathf.Clamp(stress, Constants.StatusMin, Constants.StatusMax);
         coin = Mathf.Max(0, coin);
         level = Mathf.Clamp(level, 1, Constants.EvolutionLevel);
         exp = Mathf.Max(0, exp);
@@ -83,6 +85,6 @@ public sealed class PuniStatus
             badStateCount++;
         }
 
-        isSick = badStateCount >= 2;
+        isSick = badStateCount >= 2 || stress >= 90;
     }
 }

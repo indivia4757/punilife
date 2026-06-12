@@ -5,5 +5,6 @@ public enum CareActionType
     Clean,
     Sleep,
     Study,
-    Train
+    Train,
+    Work
 }

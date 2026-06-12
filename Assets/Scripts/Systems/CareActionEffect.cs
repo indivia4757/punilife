@@ -5,6 +5,7 @@ public readonly struct CareActionEffect
     public readonly int cleanliness;
     public readonly int energy;
     public readonly int affection;
+    public readonly int stress;
     public readonly int coin;
     public readonly int exp;
     public readonly int intelligence;
@@ -20,6 +21,7 @@ public readonly struct CareActionEffect
         int cleanliness = 0,
         int energy = 0,
         int affection = 0,
+        int stress = 0,
         int coin = 0,
         int exp = 0,
         int intelligence = 0,
@@ -34,6 +36,7 @@ public readonly struct CareActionEffect
         this.cleanliness = cleanliness;
         this.energy = energy;
         this.affection = affection;
+        this.stress = stress;
         this.coin = coin;
         this.exp = exp;
         this.intelligence = intelligence;

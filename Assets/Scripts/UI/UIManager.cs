@@ -15,6 +15,7 @@ public sealed class UIManager : MonoBehaviour
     private Text moodText;
     private Text statsText;
     private Text scheduleText;
+    private Text reportText;
     private Text gardenText;
     private Text dexText;
     private StatusBarView hungerBar;
@@ -33,8 +34,9 @@ public sealed class UIManager : MonoBehaviour
     private Button sleepButton;
     private Button studyButton;
     private Button trainButton;
-    private Button weeklyPlanButton;
+    private Button monthlyPlanButton;
     private Button newEggButton;
+    private Button[] scheduleButtons;
 
     public Transform CanvasTransform { get; private set; }
 
@@ -73,7 +75,8 @@ public sealed class UIManager : MonoBehaviour
         goalText.text = BuildDailyGoal(data);
         moodText.text = BuildMoodSummary(data);
         statsText.text = BuildStats(data);
-        scheduleText.text = BuildSchedulePreview(data);
+        scheduleText.text = BuildScheduleHeader(data);
+        reportText.text = gameManager.LastMonthlyReport;
         gardenText.text = gameManager.GetGardenName();
         dexText.text = $"도감 {gameManager.GetDexUnlockedCount()}/5";
         hungerBar.SetValue(data.status.hunger);
@@ -84,13 +87,14 @@ public sealed class UIManager : MonoBehaviour
         puniView.Refresh(data);
         dexGardenPanel.Refresh(data, gameManager.GetGardenName(), gameManager.GetDexUnlockedCount());
         RefreshButtons(data);
+        RefreshScheduleButtons();
     }
 
     private string BuildMessage(SaveData data)
     {
         if (data.status.isSick)
         {
-            return "몸이 좋지 않아요. 회복이나 잠으로 컨디션을 먼저 챙겨주세요.";
+            return "몸이 좋지 않아요. 피로와 컨디션을 먼저 회복해야 해요.";
         }
 
         if (data.status.isHungry)
@@ -118,7 +122,7 @@ public sealed class UIManager : MonoBehaviour
             return gameManager.GetEvolutionHint();
         }
 
-        return "컨디션이 좋아요. 어떤 행동을 자주 하느냐에 따라 진화 성향이 달라져요.";
+        return "수업/훈련/알바는 성장을 돕지만 피로가 쌓여요. 휴식도 일정에 넣어야 합니다.";
     }
 
     private string BuildDailyGoal(SaveData data)
@@ -163,6 +167,11 @@ public sealed class UIManager : MonoBehaviour
             return "컨디션 나쁨";
         }
 
+        if (data.status.stress >= 70)
+        {
+            return "피로 누적";
+        }
+
         if (data.status.isHungry)
         {
             return "배고픔";
@@ -189,39 +198,12 @@ public sealed class UIManager : MonoBehaviour
     private string BuildStats(SaveData data)
     {
         PuniGrowthStats stats = data.growthStats;
-        return $"지능 {stats.intelligence}   체력 {stats.strength}   감성 {stats.sensitivity}\n용기 {stats.courage}   다정함 {stats.kindness}   방치 {stats.neglect}";
+        return $"지능 {stats.intelligence}   체력 {stats.strength}   감성 {stats.sensitivity}\n용기 {stats.courage}   다정함 {stats.kindness}   피로 {data.status.stress}";
     }
 
-    private string BuildSchedulePreview(SaveData data)
+    private string BuildScheduleHeader(SaveData data)
     {
-        if (data.status.isSick)
-        {
-            return "이번 주 추천: 휴식 → 식사 → 자유시간";
-        }
-
-        if (data.status.hunger < 55)
-        {
-            return "이번 주 추천: 식사 → 수업 → 휴식";
-        }
-
-        if (data.status.energy < 45)
-        {
-            return "이번 주 추천: 휴식 → 자유시간 → 식사";
-        }
-
-        if (data.stage == PuniStage.Egg)
-        {
-            return "이번 주 추천: 식사 → 대화 → 식사";
-        }
-
-        if (data.stage == PuniStage.Young)
-        {
-            return data.growthStats.intelligence <= data.growthStats.strength
-                ? "이번 주 추천: 수업 → 자유시간 → 휴식"
-                : "이번 주 추천: 훈련 → 생활관리 → 휴식";
-        }
-
-        return "이번 주 추천: 자유시간 → 생활관리 → 휴식";
+        return $"{data.currentMonth}월 일정표";
     }
 
     private void Build()
@@ -278,7 +260,7 @@ public sealed class UIManager : MonoBehaviour
         Vector2 growthButtonSize = new Vector2(154f, 50f);
         studyButton = CreateButton(canvasObject.transform, "수업", new Vector2(-248f, 90f), () => PerformCare(CareActionType.Study), growthButtonSize, 18, PuniTheme.MintButton);
         trainButton = CreateButton(canvasObject.transform, "훈련", new Vector2(-83f, 90f), () => PerformCare(CareActionType.Train), growthButtonSize, 18, PuniTheme.PeachButton);
-        weeklyPlanButton = CreateButton(canvasObject.transform, "일주일 진행", new Vector2(83f, 90f), RunWeeklyPlan, new Vector2(154f, 50f), 16, PuniTheme.CreamButton);
+        monthlyPlanButton = CreateButton(canvasObject.transform, "이번 달 진행", new Vector2(83f, 90f), RunMonthlyPlan, new Vector2(154f, 50f), 16, PuniTheme.CreamButton);
         CreateButton(canvasObject.transform, "회복", new Vector2(248f, 90f), () => gameManager.WatchAdForRecovery(), growthButtonSize, 18, PuniTheme.MintButton);
 
         Vector2 menuButtonSize = new Vector2(120f, 42f);
@@ -347,13 +329,21 @@ public sealed class UIManager : MonoBehaviour
         board.rectTransform.anchorMin = new Vector2(0.5f, 0.5f);
         board.rectTransform.anchorMax = new Vector2(0.5f, 0.5f);
         board.rectTransform.pivot = new Vector2(0.5f, 0.5f);
-        board.rectTransform.anchoredPosition = new Vector2(0f, -258f);
-        board.rectTransform.sizeDelta = new Vector2(610f, 104f);
+        board.rectTransform.anchoredPosition = new Vector2(0f, -270f);
+        board.rectTransform.sizeDelta = new Vector2(626f, 178f);
 
-        statsText = CreateCenterText(parent, "GrowthStats", new Vector2(-142f, -244f), new Vector2(300f, 66f), 17, TextAnchor.MiddleLeft);
-        scheduleText = CreateCenterText(parent, "SchedulePreview", new Vector2(168f, -244f), new Vector2(260f, 66f), 17, TextAnchor.MiddleLeft);
-        var label = CreateCenterText(parent, "BoardLabel", new Vector2(0f, -307f), new Vector2(530f, 24f), 15, TextAnchor.MiddleCenter);
-        label.text = "일정을 고르면 성향이 쌓이고, 성장 후 진화 결과가 달라집니다.";
+        scheduleText = CreateCenterText(parent, "ScheduleHeader", new Vector2(-204f, -203f), new Vector2(180f, 28f), 18, TextAnchor.MiddleLeft);
+        statsText = CreateCenterText(parent, "GrowthStats", new Vector2(142f, -203f), new Vector2(340f, 44f), 16, TextAnchor.MiddleLeft);
+        scheduleButtons = new Button[Constants.MonthlyScheduleWeeks];
+        for (int i = 0; i < scheduleButtons.Length; i++)
+        {
+            int slot = i;
+            scheduleButtons[i] = CreateCenterButton(parent, "일정", new Vector2(-228f + i * 152f, -258f), new Vector2(140f, 48f), 16, PuniTheme.CreamButton, () => CycleSchedule(slot));
+        }
+
+        reportText = CreateCenterText(parent, "MonthlyReport", new Vector2(0f, -318f), new Vector2(570f, 48f), 14, TextAnchor.MiddleCenter);
+        var label = CreateCenterText(parent, "BoardLabel", new Vector2(0f, -166f), new Vector2(560f, 22f), 14, TextAnchor.MiddleCenter);
+        label.text = "4주 일정을 직접 정하고 월말 결과를 확인하세요.";
         label.color = new Color(0.48f, 0.36f, 0.24f);
     }
 
@@ -462,8 +452,26 @@ public sealed class UIManager : MonoBehaviour
         SetButtonState(sleepButton, data.stage != PuniStage.Egg);
         SetButtonState(studyButton, data.stage == PuniStage.Young && data.status.energy >= 10);
         SetButtonState(trainButton, data.stage == PuniStage.Young && data.status.energy >= 15);
-        SetButtonState(weeklyPlanButton, data.status.coin >= 10 || data.status.energy >= 20);
+        SetButtonState(monthlyPlanButton, data.status.coin >= 0);
         SetButtonState(newEggButton, data.stage == PuniStage.Evolved);
+    }
+
+    private void RefreshScheduleButtons()
+    {
+        if (scheduleButtons == null)
+        {
+            return;
+        }
+
+        for (int i = 0; i < scheduleButtons.Length; i++)
+        {
+            CareActionType action = gameManager.GetMonthlyScheduleAction(i);
+            Text label = scheduleButtons[i].GetComponentInChildren<Text>();
+            if (label != null)
+            {
+                label.text = $"{i + 1}주\n{GetScheduleName(action)}";
+            }
+        }
     }
 
     private static void SetButtonState(Button button, bool interactable)
@@ -493,10 +501,15 @@ public sealed class UIManager : MonoBehaviour
         gameManager.PerformCare(action);
     }
 
-    private void RunWeeklyPlan()
+    private void CycleSchedule(int weekIndex)
+    {
+        gameManager.CycleMonthlySchedule(weekIndex);
+    }
+
+    private void RunMonthlyPlan()
     {
         puniView.PlayReaction(CareActionType.Study);
-        gameManager.RunWeeklyPlan();
+        gameManager.RunMonthlyPlan();
     }
 
     private void StartNewEgg()
@@ -630,6 +643,66 @@ public sealed class UIManager : MonoBehaviour
         text.rectTransform.anchoredPosition = anchoredPosition;
         text.rectTransform.sizeDelta = size;
         return text;
+    }
+
+    private static Button CreateCenterButton(
+        Transform parent,
+        string label,
+        Vector2 anchoredPosition,
+        Vector2 size,
+        int fontSize,
+        Color color,
+        UnityEngine.Events.UnityAction onClick)
+    {
+        var buttonObject = new GameObject($"{label}CenterButton");
+        buttonObject.transform.SetParent(parent, false);
+        PuniTheme.CreateShadow(buttonObject.transform, "Shadow", new Vector2(0f, -4f));
+        var image = buttonObject.AddComponent<Image>();
+        PuniTheme.ApplyRounded(image, color);
+        var visual = buttonObject.AddComponent<PuniButtonVisual>();
+        visual.Initialize(image, color);
+
+        var button = buttonObject.AddComponent<Button>();
+        button.onClick.AddListener(PlayButtonSound);
+        button.onClick.AddListener(visual.PlayPress);
+        button.onClick.AddListener(onClick);
+
+        var rect = buttonObject.GetComponent<RectTransform>();
+        rect.anchorMin = new Vector2(0.5f, 0.5f);
+        rect.anchorMax = new Vector2(0.5f, 0.5f);
+        rect.pivot = new Vector2(0.5f, 0.5f);
+        rect.anchoredPosition = anchoredPosition;
+        rect.sizeDelta = size;
+
+        var textObject = new GameObject("Text");
+        textObject.transform.SetParent(buttonObject.transform, false);
+        var text = textObject.AddComponent<Text>();
+        text.font = PuniFonts.Default;
+        text.text = label;
+        text.fontSize = fontSize;
+        text.alignment = TextAnchor.MiddleCenter;
+        text.color = PuniTheme.Ink;
+        text.raycastTarget = false;
+        text.rectTransform.anchorMin = Vector2.zero;
+        text.rectTransform.anchorMax = Vector2.one;
+        text.rectTransform.offsetMin = Vector2.zero;
+        text.rectTransform.offsetMax = Vector2.zero;
+        return button;
+    }
+
+    private static string GetScheduleName(CareActionType action)
+    {
+        return action switch
+        {
+            CareActionType.Feed => "식사",
+            CareActionType.Play => "자유시간",
+            CareActionType.Clean => "생활관리",
+            CareActionType.Sleep => "휴식",
+            CareActionType.Study => "수업",
+            CareActionType.Train => "훈련",
+            CareActionType.Work => "알바",
+            _ => "일정"
+        };
     }
 
     private void TalkToPuni()

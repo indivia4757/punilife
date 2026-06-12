@@ -250,6 +250,12 @@ public sealed class PuniView
                 scale = new Vector3(1f + pulse * 0.22f, 1f + pulse * 0.10f, 1f);
                 rotation += Mathf.Sin(progress * Mathf.PI * 6f) * 10f * pulse;
                 break;
+            case CareActionType.Work:
+                offset.x += Mathf.Sin(progress * Mathf.PI * 5f) * 18f * pulse;
+                offset.y -= pulse * 6f;
+                rotation += Mathf.Sin(progress * Mathf.PI * 6f) * 9f * pulse;
+                scale = new Vector3(1f + pulse * 0.10f, 1f - pulse * 0.05f, 1f);
+                break;
         }
     }
 
@@ -299,6 +305,11 @@ public sealed class PuniView
                 actionMarkText.text = "!";
                 SetEyes(new Vector2(38f, 18f), new Vector2(-46f, 28f), new Vector2(46f, 28f), 14f, -14f);
                 SetMouth(new Vector2(34f, 10f), new Vector2(0f, -20f), new Color(0.18f, 0.20f, 0.24f));
+                break;
+            case CareActionType.Work:
+                actionMarkText.text = "코인";
+                SetEyes(new Vector2(30f, 34f), new Vector2(-44f, 24f), new Vector2(44f, 24f), 0f, 0f);
+                SetMouth(new Vector2(30f, 8f), new Vector2(0f, -20f), new Color(0.18f, 0.20f, 0.24f));
                 break;
         }
     }
