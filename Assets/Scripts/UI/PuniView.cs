@@ -25,7 +25,7 @@ public sealed class PuniView
     private readonly Text stageText;
     private readonly Text actionMarkText;
     private readonly Sprite circleSprite;
-    private readonly Vector2 basePosition = new Vector2(0f, -65f);
+    private readonly Vector2 basePosition = new Vector2(0f, -34f);
     private Vector2 highlightBasePosition = new Vector2(-42f, 58f);
     private readonly Vector2 lowerShadeBasePosition = new Vector2(18f, -58f);
     private PuniStatus currentStatus = new PuniStatus();

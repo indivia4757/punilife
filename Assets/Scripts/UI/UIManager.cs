@@ -11,6 +11,10 @@ public sealed class UIManager : MonoBehaviour
     private Text nameText;
     private Text messageText;
     private Text speechText;
+    private Text goalText;
+    private Text moodText;
+    private Text statsText;
+    private Text scheduleText;
     private Text gardenText;
     private Text dexText;
     private StatusBarView hungerBar;
@@ -29,6 +33,7 @@ public sealed class UIManager : MonoBehaviour
     private Button sleepButton;
     private Button studyButton;
     private Button trainButton;
+    private Button weeklyPlanButton;
     private Button newEggButton;
 
     public Transform CanvasTransform { get; private set; }
@@ -65,6 +70,10 @@ public sealed class UIManager : MonoBehaviour
         nameText.text = data.puniName;
         messageText.text = BuildMessage(data);
         speechText.text = $"\"{gameManager.PuniSpeech}\"";
+        goalText.text = BuildDailyGoal(data);
+        moodText.text = BuildMoodSummary(data);
+        statsText.text = BuildStats(data);
+        scheduleText.text = BuildSchedulePreview(data);
         gardenText.text = gameManager.GetGardenName();
         dexText.text = $"도감 {gameManager.GetDexUnlockedCount()}/5";
         hungerBar.SetValue(data.status.hunger);
@@ -81,25 +90,138 @@ public sealed class UIManager : MonoBehaviour
     {
         if (data.status.isSick)
         {
-            return $"{gameManager.LastMessage}  푸니가 아파요.";
+            return "몸이 좋지 않아요. 회복이나 잠으로 컨디션을 먼저 챙겨주세요.";
         }
 
         if (data.status.isHungry)
         {
-            return $"{gameManager.LastMessage}  푸니가 배고파요.";
+            return "배가 고파요. 먹이를 주면 성장 경험치도 조금 올라요.";
         }
 
         if (data.status.isDirty)
         {
-            return $"{gameManager.LastMessage}  푸니가 씻고 싶어해요.";
+            return "몸이 끈적해요. 씻기면 기분과 청결이 회복돼요.";
         }
 
         if (data.status.isSulking)
         {
-            return $"{gameManager.LastMessage}  푸니가 외로워해요.";
+            return "조금 외로워요. 놀아주면 애착과 행복이 올라요.";
         }
 
-        return $"{gameManager.LastMessage}  {gameManager.GetEvolutionHint()}";
+        if (data.stage == PuniStage.Egg)
+        {
+            return "알 속에서 천천히 자라고 있어요. 먹이와 대화로 따뜻하게 돌봐주세요.";
+        }
+
+        if (data.status.level >= Constants.EvolutionLevel)
+        {
+            return gameManager.GetEvolutionHint();
+        }
+
+        return "컨디션이 좋아요. 어떤 행동을 자주 하느냐에 따라 진화 성향이 달라져요.";
+    }
+
+    private string BuildDailyGoal(SaveData data)
+    {
+        if (data.stage == PuniStage.Evolved)
+        {
+            return "다음 목표: 도감에 기록하고 새 알로 다른 성향을 키워보기";
+        }
+
+        if (data.status.isSick)
+        {
+            return "오늘 목표: 회복으로 컨디션을 60 이상까지 끌어올리기";
+        }
+
+        if (data.status.hunger < 70)
+        {
+            return "오늘 목표: 먹이를 줘서 배고픔 70 이상 만들기";
+        }
+
+        if (data.status.happiness < 70)
+        {
+            return "오늘 목표: 놀아주고 행복 70 이상 만들기";
+        }
+
+        if (data.status.cleanliness < 70 && data.stage != PuniStage.Egg)
+        {
+            return "오늘 목표: 씻겨서 청결 70 이상 만들기";
+        }
+
+        if (data.status.level >= Constants.EvolutionLevel)
+        {
+            return "오늘 목표: 성향을 확인하고 진화 결과를 기다리기";
+        }
+
+        return $"오늘 목표: 경험치 {data.status.NextExp - data.status.exp} 더 모아 다음 성장 단계 열기";
+    }
+
+    private string BuildMoodSummary(SaveData data)
+    {
+        if (data.status.isSick)
+        {
+            return "컨디션 나쁨";
+        }
+
+        if (data.status.isHungry)
+        {
+            return "배고픔";
+        }
+
+        if (data.status.isDirty)
+        {
+            return "씻고 싶음";
+        }
+
+        if (data.status.isSulking)
+        {
+            return "외로움";
+        }
+
+        if (data.status.energy <= Constants.LowStatusThreshold)
+        {
+            return "졸림";
+        }
+
+        return "기분 좋음";
+    }
+
+    private string BuildStats(SaveData data)
+    {
+        PuniGrowthStats stats = data.growthStats;
+        return $"지능 {stats.intelligence}   체력 {stats.strength}   감성 {stats.sensitivity}\n용기 {stats.courage}   다정함 {stats.kindness}   방치 {stats.neglect}";
+    }
+
+    private string BuildSchedulePreview(SaveData data)
+    {
+        if (data.status.isSick)
+        {
+            return "이번 주 추천: 휴식 → 식사 → 자유시간";
+        }
+
+        if (data.status.hunger < 55)
+        {
+            return "이번 주 추천: 식사 → 수업 → 휴식";
+        }
+
+        if (data.status.energy < 45)
+        {
+            return "이번 주 추천: 휴식 → 자유시간 → 식사";
+        }
+
+        if (data.stage == PuniStage.Egg)
+        {
+            return "이번 주 추천: 식사 → 대화 → 식사";
+        }
+
+        if (data.stage == PuniStage.Young)
+        {
+            return data.growthStats.intelligence <= data.growthStats.strength
+                ? "이번 주 추천: 수업 → 자유시간 → 휴식"
+                : "이번 주 추천: 훈련 → 생활관리 → 휴식";
+        }
+
+        return "이번 주 추천: 자유시간 → 생활관리 → 휴식";
     }
 
     private void Build()
@@ -120,45 +242,51 @@ public sealed class UIManager : MonoBehaviour
 
         CreateTopBand(canvasObject.transform);
 
-        titleText = CreateText(canvasObject.transform, "Title", new Vector2(0f, -30f), new Vector2(420f, 48f), 34, TextAnchor.MiddleCenter);
+        titleText = CreateText(canvasObject.transform, "Title", new Vector2(0f, -24f), new Vector2(420f, 42f), 31, TextAnchor.MiddleCenter);
         titleText.color = new Color(0.48f, 0.36f, 0.24f);
-        coinText = CreateText(canvasObject.transform, "Coin", new Vector2(250f, -40f), new Vector2(210f, 38f), 22, TextAnchor.MiddleRight);
-        levelText = CreateText(canvasObject.transform, "Level", new Vector2(-235f, -40f), new Vector2(250f, 38f), 22, TextAnchor.MiddleLeft);
-        gardenText = CreateText(canvasObject.transform, "Garden", new Vector2(-180f, -96f), new Vector2(300f, 34f), 20, TextAnchor.MiddleLeft);
-        dexText = CreateText(canvasObject.transform, "Dex", new Vector2(230f, -96f), new Vector2(220f, 34f), 20, TextAnchor.MiddleRight);
-        messageText = CreateText(canvasObject.transform, "Message", new Vector2(0f, -202f), new Vector2(610f, 48f), 19, TextAnchor.MiddleCenter);
-        nameText = CreateText(canvasObject.transform, "PuniName", new Vector2(0f, -236f), new Vector2(420f, 44f), 28, TextAnchor.MiddleCenter);
+        coinText = CreateText(canvasObject.transform, "Coin", new Vector2(252f, -42f), new Vector2(205f, 34f), 20, TextAnchor.MiddleRight);
+        levelText = CreateText(canvasObject.transform, "Level", new Vector2(-238f, -42f), new Vector2(250f, 34f), 20, TextAnchor.MiddleLeft);
+        gardenText = CreateText(canvasObject.transform, "Garden", new Vector2(-215f, -84f), new Vector2(300f, 30f), 18, TextAnchor.MiddleLeft);
+        dexText = CreateText(canvasObject.transform, "Dex", new Vector2(228f, -84f), new Vector2(220f, 30f), 18, TextAnchor.MiddleRight);
+
+        CreateNeedCard(canvasObject.transform);
+        moodText = CreateText(canvasObject.transform, "Mood", new Vector2(-232f, -137f), new Vector2(160f, 30f), 18, TextAnchor.MiddleLeft);
+        messageText = CreateText(canvasObject.transform, "Message", new Vector2(52f, -136f), new Vector2(440f, 42f), 18, TextAnchor.MiddleLeft);
+
+        nameText = CreateText(canvasObject.transform, "PuniName", new Vector2(0f, -216f), new Vector2(420f, 40f), 27, TextAnchor.MiddleCenter);
         speechText = CreateSpeechBubble(canvasObject.transform);
 
         puniView = new PuniView(canvasObject.transform);
+        CreateSimulationBoard(canvasObject.transform);
 
-        Vector2 statusSize = new Vector2(220f, 30f);
-        hungerBar = new StatusBarView(canvasObject.transform, "배고픔", new Vector2(-230f, -122f), new Color(0.96f, 0.55f, 0.45f), statusSize, 15, 58f, 64f);
-        happinessBar = new StatusBarView(canvasObject.transform, "행복", new Vector2(0f, -122f), new Color(1f, 0.78f, 0.30f), statusSize, 15, 44f, 50f);
-        cleanlinessBar = new StatusBarView(canvasObject.transform, "청결", new Vector2(230f, -122f), new Color(0.34f, 0.72f, 0.92f), statusSize, 15, 44f, 50f);
-        energyBar = new StatusBarView(canvasObject.transform, "에너지", new Vector2(-115f, -156f), new Color(0.46f, 0.72f, 0.50f), statusSize, 15, 58f, 64f);
-        affectionBar = new StatusBarView(canvasObject.transform, "애정", new Vector2(115f, -156f), new Color(0.92f, 0.48f, 0.76f), statusSize, 15, 44f, 50f);
+        Vector2 statusSize = new Vector2(192f, 27f);
+        hungerBar = new StatusBarView(canvasObject.transform, "배고픔", new Vector2(-244f, -104f), new Color(0.96f, 0.55f, 0.45f), statusSize, 14, 50f, 56f);
+        happinessBar = new StatusBarView(canvasObject.transform, "행복", new Vector2(-40f, -104f), new Color(1f, 0.78f, 0.30f), statusSize, 14, 40f, 46f);
+        cleanlinessBar = new StatusBarView(canvasObject.transform, "청결", new Vector2(164f, -104f), new Color(0.34f, 0.72f, 0.92f), statusSize, 14, 40f, 46f);
+        energyBar = new StatusBarView(canvasObject.transform, "에너지", new Vector2(-142f, -362f), new Color(0.46f, 0.72f, 0.50f), new Vector2(192f, 27f), 14, 50f, 56f);
+        affectionBar = new StatusBarView(canvasObject.transform, "애정", new Vector2(88f, -362f), new Color(0.92f, 0.48f, 0.76f), new Vector2(192f, 27f), 14, 40f, 46f);
 
         CreateActionDock(canvasObject.transform);
+        CreateGoalCard(canvasObject.transform);
 
-        Vector2 careButtonSize = new Vector2(164f, 54f);
-        feedButton = CreateButton(canvasObject.transform, "먹이", new Vector2(-178f, 258f), () => PerformCare(CareActionType.Feed), careButtonSize, 20, PuniTheme.CreamButton);
-        playButton = CreateButton(canvasObject.transform, "놀기", new Vector2(0f, 258f), () => PerformCare(CareActionType.Play), careButtonSize, 20, PuniTheme.PeachButton);
-        cleanButton = CreateButton(canvasObject.transform, "청소", new Vector2(178f, 258f), () => PerformCare(CareActionType.Clean), careButtonSize, 20, PuniTheme.SkyButton);
-        sleepButton = CreateButton(canvasObject.transform, "잠", new Vector2(-178f, 196f), () => PerformCare(CareActionType.Sleep), careButtonSize, 20, PuniTheme.LilacButton);
-        studyButton = CreateButton(canvasObject.transform, "공부", new Vector2(0f, 196f), () => PerformCare(CareActionType.Study), careButtonSize, 20, PuniTheme.MintButton);
-        trainButton = CreateButton(canvasObject.transform, "훈련", new Vector2(178f, 196f), () => PerformCare(CareActionType.Train), careButtonSize, 20, PuniTheme.PeachButton);
+        Vector2 careButtonSize = new Vector2(156f, 64f);
+        feedButton = CreateButton(canvasObject.transform, "식사", new Vector2(-248f, 164f), () => PerformCare(CareActionType.Feed), careButtonSize, 20, PuniTheme.CreamButton);
+        playButton = CreateButton(canvasObject.transform, "자유시간", new Vector2(-83f, 164f), () => PerformCare(CareActionType.Play), careButtonSize, 18, PuniTheme.PeachButton);
+        cleanButton = CreateButton(canvasObject.transform, "생활관리", new Vector2(83f, 164f), () => PerformCare(CareActionType.Clean), careButtonSize, 18, PuniTheme.SkyButton);
+        sleepButton = CreateButton(canvasObject.transform, "휴식", new Vector2(248f, 164f), () => PerformCare(CareActionType.Sleep), careButtonSize, 20, PuniTheme.LilacButton);
 
-        Vector2 menuButtonSize = new Vector2(164f, 52f);
-        CreateButton(canvasObject.transform, "도감", new Vector2(-178f, 124f), ShowDexGarden, menuButtonSize, 20, PuniTheme.MintButton);
-        CreateButton(canvasObject.transform, "스낵 탭", new Vector2(0f, 124f), StartMiniGame, menuButtonSize, 20, PuniTheme.CreamButton);
-        CreateButton(canvasObject.transform, "가이드", new Vector2(178f, 124f), ShowGrowthGuide, menuButtonSize, 20, PuniTheme.SkyButton);
+        Vector2 growthButtonSize = new Vector2(154f, 50f);
+        studyButton = CreateButton(canvasObject.transform, "수업", new Vector2(-248f, 90f), () => PerformCare(CareActionType.Study), growthButtonSize, 18, PuniTheme.MintButton);
+        trainButton = CreateButton(canvasObject.transform, "훈련", new Vector2(-83f, 90f), () => PerformCare(CareActionType.Train), growthButtonSize, 18, PuniTheme.PeachButton);
+        weeklyPlanButton = CreateButton(canvasObject.transform, "일주일 진행", new Vector2(83f, 90f), RunWeeklyPlan, new Vector2(154f, 50f), 16, PuniTheme.CreamButton);
+        CreateButton(canvasObject.transform, "회복", new Vector2(248f, 90f), () => gameManager.WatchAdForRecovery(), growthButtonSize, 18, PuniTheme.MintButton);
 
-        Vector2 utilityButtonSize = new Vector2(148f, 50f);
-        CreateButton(canvasObject.transform, "무료 간식", new Vector2(-238f, 52f), () => gameManager.WatchAdForFreeSnack(), utilityButtonSize, 18, PuniTheme.CreamButton);
-        CreateButton(canvasObject.transform, "회복", new Vector2(-79f, 52f), () => gameManager.WatchAdForRecovery(), utilityButtonSize, 18, PuniTheme.MintButton);
-        CreateButton(canvasObject.transform, "이름", new Vector2(80f, 52f), ShowNameEdit, utilityButtonSize, 18, PuniTheme.SkyButton);
-        newEggButton = CreateButton(canvasObject.transform, "새 알", new Vector2(239f, 52f), StartNewEgg, utilityButtonSize, 18, PuniTheme.LilacButton);
+        Vector2 menuButtonSize = new Vector2(120f, 42f);
+        CreateButton(canvasObject.transform, "도감", new Vector2(-256f, 34f), ShowDexGarden, menuButtonSize, 16, PuniTheme.MintButton);
+        CreateButton(canvasObject.transform, "가이드", new Vector2(-128f, 34f), ShowGrowthGuide, menuButtonSize, 16, PuniTheme.SkyButton);
+        CreateButton(canvasObject.transform, "이름", new Vector2(0f, 34f), ShowNameEdit, menuButtonSize, 16, PuniTheme.SkyButton);
+        CreateButton(canvasObject.transform, "알바", new Vector2(128f, 34f), StartMiniGame, menuButtonSize, 16, PuniTheme.CreamButton);
+        newEggButton = CreateButton(canvasObject.transform, "새 알", new Vector2(256f, 34f), StartNewEgg, menuButtonSize, 16, PuniTheme.LilacButton);
         dexGardenPanel = new DexGardenPanel(canvasObject.transform);
         growthGuidePanel = new GrowthGuidePanel(canvasObject.transform);
         nameEditPanel = new NameEditPanel(canvasObject.transform);
@@ -175,7 +303,58 @@ public sealed class UIManager : MonoBehaviour
         band.rectTransform.anchorMax = new Vector2(1f, 1f);
         band.rectTransform.pivot = new Vector2(0.5f, 1f);
         band.rectTransform.anchoredPosition = Vector2.zero;
-        band.rectTransform.sizeDelta = new Vector2(0f, 255f);
+        band.rectTransform.sizeDelta = new Vector2(0f, 176f);
+    }
+
+    private static void CreateNeedCard(Transform parent)
+    {
+        var card = CreatePanel(parent, "NeedCard", new Color(1f, 0.96f, 0.84f, 0.88f));
+        PuniTheme.ApplyRounded(card, new Color(1f, 0.96f, 0.84f, 0.88f));
+        PuniTheme.CreateShadow(card.transform, "NeedCardShadow", new Vector2(0f, -5f));
+        card.raycastTarget = false;
+        card.rectTransform.anchorMin = new Vector2(0.5f, 1f);
+        card.rectTransform.anchorMax = new Vector2(0.5f, 1f);
+        card.rectTransform.pivot = new Vector2(0.5f, 1f);
+        card.rectTransform.anchoredPosition = new Vector2(0f, -122f);
+        card.rectTransform.sizeDelta = new Vector2(610f, 76f);
+
+        var label = CreateText(parent, "NeedLabel", new Vector2(-232f, -124f), new Vector2(150f, 28f), 16, TextAnchor.MiddleLeft);
+        label.text = "지금 푸니";
+        label.color = new Color(0.56f, 0.38f, 0.20f);
+    }
+
+    private void CreateGoalCard(Transform parent)
+    {
+        var card = CreatePanel(parent, "GoalCard", new Color(1f, 0.98f, 0.90f, 0.92f));
+        PuniTheme.ApplyRounded(card, new Color(1f, 0.98f, 0.90f, 0.92f));
+        PuniTheme.CreateShadow(card.transform, "GoalCardShadow", new Vector2(0f, -4f));
+        card.raycastTarget = false;
+        card.rectTransform.anchorMin = new Vector2(0.5f, 0f);
+        card.rectTransform.anchorMax = new Vector2(0.5f, 0f);
+        card.rectTransform.pivot = new Vector2(0.5f, 0.5f);
+        card.rectTransform.anchoredPosition = new Vector2(0f, 246f);
+        card.rectTransform.sizeDelta = new Vector2(610f, 58f);
+
+        goalText = CreateBottomText(parent, "DailyGoal", new Vector2(0f, 246f), new Vector2(560f, 44f), 18, TextAnchor.MiddleCenter);
+    }
+
+    private void CreateSimulationBoard(Transform parent)
+    {
+        var board = CreatePanel(parent, "SimulationBoard", new Color(1f, 0.98f, 0.92f, 0.82f));
+        PuniTheme.ApplyRounded(board, new Color(1f, 0.98f, 0.92f, 0.82f));
+        PuniTheme.CreateShadow(board.transform, "SimulationBoardShadow", new Vector2(0f, -5f));
+        board.raycastTarget = false;
+        board.rectTransform.anchorMin = new Vector2(0.5f, 0.5f);
+        board.rectTransform.anchorMax = new Vector2(0.5f, 0.5f);
+        board.rectTransform.pivot = new Vector2(0.5f, 0.5f);
+        board.rectTransform.anchoredPosition = new Vector2(0f, -258f);
+        board.rectTransform.sizeDelta = new Vector2(610f, 104f);
+
+        statsText = CreateCenterText(parent, "GrowthStats", new Vector2(-142f, -244f), new Vector2(300f, 66f), 17, TextAnchor.MiddleLeft);
+        scheduleText = CreateCenterText(parent, "SchedulePreview", new Vector2(168f, -244f), new Vector2(260f, 66f), 17, TextAnchor.MiddleLeft);
+        var label = CreateCenterText(parent, "BoardLabel", new Vector2(0f, -307f), new Vector2(530f, 24f), 15, TextAnchor.MiddleCenter);
+        label.text = "일정을 고르면 성향이 쌓이고, 성장 후 진화 결과가 달라집니다.";
+        label.color = new Color(0.48f, 0.36f, 0.24f);
     }
 
     private static void CreateEnvironment(Transform parent)
@@ -202,6 +381,10 @@ public sealed class UIManager : MonoBehaviour
         floor.rectTransform.anchorMax = new Vector2(0.5f, 0.5f);
 
         CreateWindow(parent, new Vector2(242f, -350f));
+        CreateRoomProp(parent, "BedProp", new Vector2(-250f, -252f), new Vector2(168f, 78f), PuniTheme.LilacButton, new Color(1f, 0.96f, 0.86f, 0.9f));
+        CreateRoomProp(parent, "FoodBowlProp", new Vector2(-226f, -388f), new Vector2(120f, 42f), PuniTheme.PeachButton, PuniTheme.CreamButton);
+        CreateRoomProp(parent, "WashProp", new Vector2(245f, -248f), new Vector2(126f, 72f), PuniTheme.SkyButton, new Color(0.82f, 0.94f, 0.98f, 0.9f));
+        CreateRoomProp(parent, "BookProp", new Vector2(238f, -392f), new Vector2(112f, 48f), PuniTheme.MintButton, new Color(1f, 0.98f, 0.88f, 0.9f));
         CreateLeaf(parent, "LeafLeft", new Vector2(-292f, -372f), new Vector2(52f, 96f), new Color(0.56f, 0.78f, 0.55f), -28f, 0.8f);
         CreateLeaf(parent, "LeafRight", new Vector2(300f, -390f), new Vector2(48f, 88f), new Color(0.47f, 0.72f, 0.58f), 30f, 1.3f);
     }
@@ -215,7 +398,7 @@ public sealed class UIManager : MonoBehaviour
         dock.rectTransform.anchorMax = new Vector2(1f, 0f);
         dock.rectTransform.pivot = new Vector2(0.5f, 0f);
         dock.rectTransform.anchoredPosition = Vector2.zero;
-        dock.rectTransform.sizeDelta = new Vector2(0f, 310f);
+        dock.rectTransform.sizeDelta = new Vector2(0f, 286f);
     }
 
     private static void CreateWindow(Transform parent, Vector2 position)
@@ -251,6 +434,26 @@ public sealed class UIManager : MonoBehaviour
         leaf.gameObject.AddComponent<PuniBackgroundMotion>().Initialize(0.8f, new Vector2(4f, 3f), 5f, phase);
     }
 
+    private static void CreateRoomProp(Transform parent, string name, Vector2 position, Vector2 size, Color baseColor, Color accentColor)
+    {
+        var prop = CreatePanel(parent, name, baseColor);
+        PuniTheme.ApplyRounded(prop, new Color(baseColor.r, baseColor.g, baseColor.b, 0.62f));
+        prop.raycastTarget = false;
+        prop.rectTransform.anchorMin = new Vector2(0.5f, 0.5f);
+        prop.rectTransform.anchorMax = new Vector2(0.5f, 0.5f);
+        prop.rectTransform.pivot = new Vector2(0.5f, 0.5f);
+        prop.rectTransform.anchoredPosition = position;
+        prop.rectTransform.sizeDelta = size;
+
+        var accent = CreatePanel(prop.transform, $"{name}Accent", accentColor);
+        PuniTheme.ApplyRounded(accent, accentColor);
+        accent.raycastTarget = false;
+        accent.rectTransform.anchorMin = new Vector2(0.12f, 0.18f);
+        accent.rectTransform.anchorMax = new Vector2(0.88f, 0.78f);
+        accent.rectTransform.offsetMin = Vector2.zero;
+        accent.rectTransform.offsetMax = Vector2.zero;
+    }
+
     private void RefreshButtons(SaveData data)
     {
         SetButtonState(feedButton, data.status.coin >= 10);
@@ -259,6 +462,7 @@ public sealed class UIManager : MonoBehaviour
         SetButtonState(sleepButton, data.stage != PuniStage.Egg);
         SetButtonState(studyButton, data.stage == PuniStage.Young && data.status.energy >= 10);
         SetButtonState(trainButton, data.stage == PuniStage.Young && data.status.energy >= 15);
+        SetButtonState(weeklyPlanButton, data.status.coin >= 10 || data.status.energy >= 20);
         SetButtonState(newEggButton, data.stage == PuniStage.Evolved);
     }
 
@@ -287,6 +491,12 @@ public sealed class UIManager : MonoBehaviour
     {
         puniView.PlayReaction(action);
         gameManager.PerformCare(action);
+    }
+
+    private void RunWeeklyPlan()
+    {
+        puniView.PlayReaction(CareActionType.Study);
+        gameManager.RunWeeklyPlan();
     }
 
     private void StartNewEgg()
@@ -352,8 +562,8 @@ public sealed class UIManager : MonoBehaviour
         bubble.rectTransform.anchorMin = new Vector2(0.5f, 1f);
         bubble.rectTransform.anchorMax = new Vector2(0.5f, 1f);
         bubble.rectTransform.pivot = new Vector2(0.5f, 1f);
-        bubble.rectTransform.anchoredPosition = new Vector2(0f, -280f);
-        bubble.rectTransform.sizeDelta = new Vector2(540f, 64f);
+        bubble.rectTransform.anchoredPosition = new Vector2(0f, -250f);
+        bubble.rectTransform.sizeDelta = new Vector2(560f, 72f);
         var button = bubble.gameObject.AddComponent<Button>();
         button.onClick.AddListener(PlayButtonSound);
         button.onClick.AddListener(() =>
@@ -379,6 +589,46 @@ public sealed class UIManager : MonoBehaviour
         text.rectTransform.anchorMax = Vector2.one;
         text.rectTransform.offsetMin = new Vector2(18f, 8f);
         text.rectTransform.offsetMax = new Vector2(-18f, -8f);
+        return text;
+    }
+
+    private static Text CreateBottomText(Transform parent, string name, Vector2 anchoredPosition, Vector2 size, int fontSize, TextAnchor alignment)
+    {
+        var textObject = new GameObject(name);
+        textObject.transform.SetParent(parent, false);
+        var text = textObject.AddComponent<Text>();
+        text.font = PuniFonts.Default;
+        text.fontSize = fontSize;
+        text.alignment = alignment;
+        text.horizontalOverflow = HorizontalWrapMode.Wrap;
+        text.verticalOverflow = VerticalWrapMode.Truncate;
+        text.color = new Color(0.18f, 0.21f, 0.23f);
+        text.raycastTarget = false;
+        text.rectTransform.anchorMin = new Vector2(0.5f, 0f);
+        text.rectTransform.anchorMax = new Vector2(0.5f, 0f);
+        text.rectTransform.pivot = new Vector2(0.5f, 0.5f);
+        text.rectTransform.anchoredPosition = anchoredPosition;
+        text.rectTransform.sizeDelta = size;
+        return text;
+    }
+
+    private static Text CreateCenterText(Transform parent, string name, Vector2 anchoredPosition, Vector2 size, int fontSize, TextAnchor alignment)
+    {
+        var textObject = new GameObject(name);
+        textObject.transform.SetParent(parent, false);
+        var text = textObject.AddComponent<Text>();
+        text.font = PuniFonts.Default;
+        text.fontSize = fontSize;
+        text.alignment = alignment;
+        text.horizontalOverflow = HorizontalWrapMode.Wrap;
+        text.verticalOverflow = VerticalWrapMode.Truncate;
+        text.color = new Color(0.18f, 0.21f, 0.23f);
+        text.raycastTarget = false;
+        text.rectTransform.anchorMin = new Vector2(0.5f, 0.5f);
+        text.rectTransform.anchorMax = new Vector2(0.5f, 0.5f);
+        text.rectTransform.pivot = new Vector2(0.5f, 0.5f);
+        text.rectTransform.anchoredPosition = anchoredPosition;
+        text.rectTransform.sizeDelta = size;
         return text;
     }
 

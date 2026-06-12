@@ -118,6 +118,56 @@ public sealed class GameManager : MonoBehaviour
         uiManager.Refresh();
     }
 
+    public void RunWeeklyPlan()
+    {
+        CareActionType[] plan = BuildWeeklyPlan(Puni.Data);
+        int appliedCount = 0;
+        CareActionType lastApplied = CareActionType.Play;
+        PuniStage previousStage = Puni.Data.stage;
+        PuniEvolutionType previousEvolution = Puni.Data.evolutionType;
+
+        for (int i = 0; i < plan.Length; i++)
+        {
+            if (Puni.PerformCare(plan[i], out _))
+            {
+                appliedCount++;
+                lastApplied = plan[i];
+            }
+        }
+
+        if (appliedCount == 0)
+        {
+            LastMessage = "이번 주 일정을 진행하지 못했어요. 컨디션과 코인을 확인해주세요.";
+            PuniSpeech = "오늘은 조금 무리인 것 같아.";
+            audioManager.PlayError();
+            uiManager.Refresh();
+            return;
+        }
+
+        if (Puni.Data.stage == PuniStage.Evolved &&
+            (previousStage != PuniStage.Evolved || previousEvolution != Puni.Data.evolutionType))
+        {
+            LastMessage = $"이번 주 일정을 마치고 {PuniText.EvolutionName(Puni.Data.evolutionType)}로 진화했어요.";
+            PuniSpeech = "이번 주가 나를 바꿨어!";
+            audioManager.PlayEvolution();
+        }
+        else if (Puni.Data.stage != previousStage)
+        {
+            LastMessage = $"이번 주 일정을 마치고 {PuniText.StageName(Puni.Data.stage)}로 성장했어요.";
+            PuniSpeech = "나 조금 자란 것 같지?";
+            audioManager.PlayReward();
+        }
+        else
+        {
+            LastMessage = $"이번 주 일정 {appliedCount}개를 마쳤어요. 마지막 일정: {GetScheduleName(lastApplied)}";
+            PuniSpeech = BuildWeeklySpeech(lastApplied);
+            audioManager.PlayReward();
+        }
+
+        Save();
+        uiManager.Refresh();
+    }
+
     public void StartNewEgg()
     {
         SaveData data = Puni.Data;
@@ -427,6 +477,66 @@ public sealed class GameManager : MonoBehaviour
             PuniStage.Young => "나 어떤 푸니가 될까?",
             PuniStage.Evolved => "내 기록을 도감에 남겨줘.",
             _ => "안녕!"
+        };
+    }
+
+    private static CareActionType[] BuildWeeklyPlan(SaveData data)
+    {
+        if (data.status.isSick)
+        {
+            return new[] { CareActionType.Sleep, CareActionType.Feed, CareActionType.Play };
+        }
+
+        if (data.status.hunger < 55)
+        {
+            return new[] { CareActionType.Feed, CareActionType.Study, CareActionType.Sleep };
+        }
+
+        if (data.status.energy < 45)
+        {
+            return new[] { CareActionType.Sleep, CareActionType.Play, CareActionType.Feed };
+        }
+
+        if (data.stage == PuniStage.Egg)
+        {
+            return new[] { CareActionType.Feed, CareActionType.Play, CareActionType.Feed };
+        }
+
+        if (data.stage == PuniStage.Young)
+        {
+            return data.growthStats.intelligence <= data.growthStats.strength
+                ? new[] { CareActionType.Study, CareActionType.Play, CareActionType.Sleep }
+                : new[] { CareActionType.Train, CareActionType.Clean, CareActionType.Sleep };
+        }
+
+        return new[] { CareActionType.Play, CareActionType.Clean, CareActionType.Sleep };
+    }
+
+    private static string GetScheduleName(CareActionType action)
+    {
+        return action switch
+        {
+            CareActionType.Feed => "식사",
+            CareActionType.Play => "자유시간",
+            CareActionType.Clean => "생활관리",
+            CareActionType.Sleep => "휴식",
+            CareActionType.Study => "수업",
+            CareActionType.Train => "훈련",
+            _ => "일정"
+        };
+    }
+
+    private static string BuildWeeklySpeech(CareActionType action)
+    {
+        return action switch
+        {
+            CareActionType.Feed => "든든하게 먹으니까 다음 일정도 할 수 있어.",
+            CareActionType.Play => "자유시간이 있어서 버틸 수 있었어.",
+            CareActionType.Clean => "생활이 정돈되니까 마음도 편해졌어.",
+            CareActionType.Sleep => "푹 쉬니까 다시 해볼 수 있을 것 같아.",
+            CareActionType.Study => "수업은 어렵지만 머리가 반짝이는 느낌이야.",
+            CareActionType.Train => "훈련은 힘들지만 조금 강해졌어.",
+            _ => "이번 주도 지나갔어."
         };
     }
 
