@@ -65,7 +65,7 @@ public sealed class UIManager : MonoBehaviour
         titleText.text = "푸니 라이프";
         coinText.text = $"코인 {data.status.coin}";
         levelText.text = data.stage == PuniStage.Evolved
-            ? $"Lv.{data.status.level}  진화 완료"
+            ? $"Lv.{data.status.level}  {gameManager.GetLifePathName()}"
             : data.status.level >= Constants.EvolutionLevel
             ? $"Lv.{data.status.level}  진화 준비"
             : $"Lv.{data.status.level}  경험치 {data.status.exp}/{data.status.NextExp}";

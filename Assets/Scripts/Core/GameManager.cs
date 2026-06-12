@@ -199,6 +199,13 @@ public sealed class GameManager : MonoBehaviour
         string report = $"{data.currentMonth}월 결과: {actionSummary}\n";
         report += $"코인 {FormatDelta(coinDelta)}  피로 {FormatDelta(stressDelta)}  Lv {beforeLevel}->{data.status.level}\n";
         report += $"능력: 지능 {FormatDelta(intelligenceDelta)} 체력 {FormatDelta(strengthDelta)} 감성 {FormatDelta(sensitivityDelta)} 용기 {FormatDelta(courageDelta)} 다정함 {FormatDelta(kindnessDelta)}";
+        string monthlyEvent = BuildMonthlyEvent(data);
+        if (!string.IsNullOrEmpty(monthlyEvent))
+        {
+            report += $"\n이벤트: {monthlyEvent}";
+            LastMessage = monthlyEvent;
+        }
+
         LastMonthlyReport = report;
         data.currentMonth++;
 
@@ -362,6 +369,11 @@ public sealed class GameManager : MonoBehaviour
     public string GetEvolutionHint()
     {
         return evolutionSystem.GetEvolutionHint(Puni.Data);
+    }
+
+    public string GetLifePathName()
+    {
+        return BuildLifePathName(Puni.Data);
     }
 
     public void Save()
@@ -588,6 +600,85 @@ public sealed class GameManager : MonoBehaviour
         }
 
         return actions[0];
+    }
+
+    private static string BuildMonthlyEvent(SaveData data)
+    {
+        if (data.status.stress >= 80)
+        {
+            data.growthStats.neglect += 2;
+            data.status.happiness -= 8;
+            data.status.Clamp();
+            data.growthStats.Clamp();
+            return "피로가 누적되어 다음 달은 휴식이 필요합니다.";
+        }
+
+        PuniGrowthStats stats = data.growthStats;
+        if (stats.intelligence >= 30 && stats.intelligence >= stats.strength + 8)
+        {
+            data.status.affection += 3;
+            data.status.Clamp();
+            return "푸니가 혼자 책을 읽다가 새로운 질문을 가져왔어요.";
+        }
+
+        if (stats.strength >= 30 && stats.strength >= stats.intelligence + 8)
+        {
+            data.status.energy = Mathf.Min(Constants.StatusMax, data.status.energy + 8);
+            data.status.Clamp();
+            return "훈련 성과가 나타나 몸놀림이 가벼워졌어요.";
+        }
+
+        if (stats.kindness >= 25)
+        {
+            data.status.happiness += 6;
+            data.status.Clamp();
+            return "동네 친구를 도와주고 기분 좋은 하루를 보냈어요.";
+        }
+
+        if (data.status.coin <= 20)
+        {
+            data.status.happiness -= 5;
+            data.status.Clamp();
+            return "코인이 부족해 다음 달 계획을 신중히 세워야 해요.";
+        }
+
+        return string.Empty;
+    }
+
+    private static string BuildLifePathName(SaveData data)
+    {
+        if (data.stage != PuniStage.Evolved)
+        {
+            return "진로 준비 중";
+        }
+
+        PuniGrowthStats stats = data.growthStats;
+        if (data.evolutionType == PuniEvolutionType.Shadow || stats.neglect >= Constants.ShadowNeglectThreshold)
+        {
+            return "그림자 방랑자";
+        }
+
+        if (stats.intelligence >= stats.strength && stats.intelligence >= stats.kindness)
+        {
+            return "별빛 연구자";
+        }
+
+        if (stats.strength >= stats.intelligence && stats.courage >= 30)
+        {
+            return "작은 수호자";
+        }
+
+        if (stats.kindness >= 35)
+        {
+            return "숲의 돌봄사";
+        }
+
+        if (data.status.affection >= Constants.SunnyAffectionThreshold)
+        {
+            return "햇살 친구";
+        }
+
+        return "자유로운 푸니";
     }
 
     private static string GetScheduleName(CareActionType action)
